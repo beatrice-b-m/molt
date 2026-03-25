@@ -1,8 +1,8 @@
 :root {
 	color-scheme: dark;
-	--bg-primary: #1e1e1e;
-	--bg-secondary: #2d2d2d;
-	--bg-tertiary: #3d3d3d;
+	--bg-primary: rgba(30, 30, 30, 0.85);
+	--bg-secondary: rgba(45, 45, 45, 0.8);
+	--bg-tertiary: rgba(61, 61, 61, 0.8);
 	--text-primary: #e0e0e0;
 	--text-secondary: #999;
 	--accent: #007aff;
@@ -19,7 +19,7 @@
 
 html, body, #root {
 	height: 100%;
-	background: var(--bg-primary);
+	background: transparent;
 	color: var(--text-primary);
 	font-family: var(--font-system);
 	overflow: hidden;
