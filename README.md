@@ -48,8 +48,10 @@ The app launches as a **menu bar icon** (no Dock icon). Click the tray icon to t
 ## Production Build
 
 ```bash
-cargo tauri build
+bun run build:app
 ```
+
+> **Note:** DMG bundling runs an AppleScript to customize Finder appearance. This hangs in non-GUI environments (e.g. tmux, SSH). The `build:app` script sets `CI=true` to skip that step. The resulting DMG works identically; only the icon layout inside the mounted volume is uncustomized.
 
 ## Testing
 
