@@ -11,6 +11,14 @@ Precompiled `.dmg` installers for macOS are available on the [Releases](../../re
 
 Download the `.dmg` for your architecture, open it, and drag Molt to Applications. The only runtime requirement is **Python 3** (`python3` on PATH or configured in `~/.config/molt/config.toml`).
 
+> **macOS Gatekeeper notice:** Release builds are not yet Apple-notarized. On first launch macOS may report the app is "damaged and can't be opened." To fix this, run:
+>
+> ```bash
+> xattr -cr /Applications/Molt.app
+> ```
+>
+> Then open the app normally. This removes the quarantine flag macOS applies to unsigned downloads.
+
 ## Development Prerequisites
 
 - **macOS** 10.15+
