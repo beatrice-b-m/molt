@@ -137,3 +137,54 @@ pub fn resolve_kernel_script_path(app_handle: &tauri::AppHandle) -> PathBuf {
         .map(|d: PathBuf| d.join("resources").join("kernel_server.py"))
         .unwrap_or_else(|| PathBuf::from("resources/kernel_server.py"))
 }
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn default_config_has_expected_values() {
+        let cfg = AppConfig::default();
+        assert_eq!(cfg.python.interpreter, "python3");
+        assert_eq!(cfg.app.auto_launch, false);
+        assert_eq!(cfg.app.tab_count, 4);
+    }
+
+    #[test]
+    fn toml_parses_custom_interpreter() {
+        let toml = r#"
+[python]
+interpreter = "/usr/local/bin/python3.12"
+
+[app]
+auto_launch = true
+tab_count = 2
+"#;
+        let cfg: AppConfig = toml::from_str(toml).expect("parse failed");
+        assert_eq!(cfg.python.interpreter, "/usr/local/bin/python3.12");
+        assert_eq!(cfg.app.auto_launch, true);
+        assert_eq!(cfg.app.tab_count, 2);
+    }
+
+    #[test]
+    fn toml_empty_string_produces_defaults() {
+        let cfg: AppConfig = toml::from_str("").expect("parse failed");
+        assert_eq!(cfg.python.interpreter, "python3");
+        assert_eq!(cfg.app.auto_launch, false);
+        assert_eq!(cfg.app.tab_count, 4);
+    }
+
+    #[test]
+    fn toml_partial_python_section_fills_app_defaults() {
+        let toml = r#"
+[python]
+interpreter = "pypy3"
+"#;
+        let cfg: AppConfig = toml::from_str(toml).expect("parse failed");
+        assert_eq!(cfg.python.interpreter, "pypy3");
+        // app section absent — must fall back to defaults
+        assert_eq!(cfg.app.auto_launch, false);
+        assert_eq!(cfg.app.tab_count, 4);
+    }
+}

@@ -1,6 +1,6 @@
 import { useNotebookStore } from "../store/notebookStore";
 import { restartKernel, stopKernel } from "../hooks/useKernel";
-import { executeSingleCell } from "./Cell";
+import { executeSingleCell } from "../hooks/execution";
 
 const STATE_COLOR: Record<string, string> = {
 	idle: "var(--success)",
