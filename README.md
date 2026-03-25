@@ -48,8 +48,10 @@ The app launches as a **menu bar icon** (no Dock icon). Click the tray icon to t
 ## Production Build
 
 ```bash
-cargo tauri build
+bun run build:app
 ```
+
+> **Note:** The `CI` environment variable must be unset for DMG bundling to succeed. The `build:app` script handles this automatically. If running `cargo tauri build` directly, prefix with `CI=`.
 
 ## Testing
 
