@@ -2,7 +2,16 @@
 
 A macOS menu bar application providing a lightweight, always-available scratchpad of Python notebooks. Inspired by Tot's minimal multi-tab design, with executable Python cells per tab backed by isolated kernels.
 
-## Prerequisites
+## Install
+
+Precompiled `.dmg` installers for macOS are available on the [Releases](../../releases) page:
+
+- **Apple Silicon** (M1/M2/M3/M4): `Molt_<version>_aarch64.dmg`
+- **Intel**: `Molt_<version>_x86_64.dmg`
+
+Download the `.dmg` for your architecture, open it, and drag Molt to Applications. The only runtime requirement is **Python 3** (`python3` on PATH or configured in `~/.config/molt/config.toml`).
+
+## Development Prerequisites
 
 - **macOS** 10.15+
 - **Rust** 1.77+ with `cargo`
