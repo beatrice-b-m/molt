@@ -67,4 +67,12 @@ export async function executeSingleCell(tabIndex: number, cellId: string): Promi
 		store.setCellOutputs(tabIndex, cellId, [{ outputType: "error", text: String(e) }]);
 		store.setCellState(tabIndex, cellId, "error");
 	}
+
+	// Jupyter convention: running the final cell in a tab auto-creates a
+	// new empty cell beneath it so the user always has somewhere to type.
+	const updated = useNotebookStore.getState();
+	const nb = updated.notebooks.find((n) => n.tabIndex === tabIndex);
+	if (nb && nb.cells.length > 0 && nb.cells[nb.cells.length - 1].id === cellId) {
+		updated.addCell(tabIndex, cellId);
+	}
 }
