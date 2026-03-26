@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { EditorView, keymap } from "@codemirror/view";
-import { EditorState } from "@codemirror/state";
+import { EditorState, Prec } from "@codemirror/state";
 import { python } from "@codemirror/lang-python";
 import { defaultKeymap, indentWithTab } from "@codemirror/commands";
 import { basicSetup } from "codemirror";
@@ -101,10 +101,11 @@ export function Cell({ cell, tabIndex }: Props) {
 				extensions: [
 					basicSetup,
 					python(),
-					keymap.of([
-						indentWithTab,
-						// Shift+Enter: run and (optionally) advance — full advance
-						// behaviour is wired in the global shortcuts task.
+					// Execution keybindings at highest precedence so they
+					// override basicSetup's defaultKeymap, which binds
+					// Shift+Enter to insertNewlineAndIndent via its
+					// { key: "Enter", shift: ... } property.
+					Prec.highest(keymap.of([
 						{
 							key: "Shift-Enter",
 							run: () => {
@@ -112,7 +113,6 @@ export function Cell({ cell, tabIndex }: Props) {
 								return true;
 							},
 						},
-						// Cmd+Enter: run, keep focus.
 						{
 							key: "Mod-Enter",
 							run: () => {
@@ -120,8 +120,8 @@ export function Cell({ cell, tabIndex }: Props) {
 								return true;
 							},
 						},
-						...defaultKeymap,
-					]),
+					])),
+					keymap.of([indentWithTab, ...defaultKeymap]),
 					darkTheme,
 					EditorView.updateListener.of((update) => {
 						if (update.docChanged) {
