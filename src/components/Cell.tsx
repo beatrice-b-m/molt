@@ -9,46 +9,9 @@ import { useNotebookStore } from "../store/notebookStore";
 import { interruptKernel } from "../hooks/useKernel";
 import { executeSingleCell } from "../hooks/execution";
 import { CellOutput as CellOutputView } from "./CellOutput";
+import { useThemeStore } from "../theme/store";
+import { buildEditorExtensions } from "../theme/codemirror";
 
-// ---------------------------------------------------------------------------
-// Dark editor theme — applied on top of basicSetup's default styles.
-// ---------------------------------------------------------------------------
-const darkTheme = EditorView.theme(
-	{
-		"&": {
-			backgroundColor: "#1e1e1e",
-			color: "#d4d4d4",
-		},
-		".cm-content": {
-			caretColor: "#d4d4d4",
-			fontFamily: "'SF Mono', 'Fira Code', 'Consolas', monospace",
-			fontSize: "13px",
-			padding: "4px 0",
-		},
-		".cm-cursor, .cm-dropCursor": {
-			borderLeftColor: "#aeafad",
-		},
-		"&.cm-focused .cm-selectionBackground, .cm-selectionBackground": {
-			backgroundColor: "#264f78",
-		},
-		".cm-gutters": {
-			backgroundColor: "#1e1e1e",
-			border: "none",
-			color: "#555",
-		},
-		".cm-activeLineGutter": {
-			backgroundColor: "#252525",
-		},
-		".cm-activeLine": {
-			backgroundColor: "#252525",
-		},
-		// Let the cell container own scrolling; the editor itself expands.
-		".cm-scroller": {
-			overflow: "visible",
-		},
-	},
-	{ dark: true },
-);
 
 
 // ---------------------------------------------------------------------------
@@ -68,6 +31,7 @@ export function Cell({ cell, tabIndex }: Props) {
 	const updateCellSource = useNotebookStore((s) => s.updateCellSource);
 	const focusedCellId = useNotebookStore((s) => s.focusedCellId);
 	const setFocusedCellId = useNotebookStore((s) => s.setFocusedCellId);
+	const theme = useThemeStore((s) => s.theme);
 
 	const [hovered, setHovered] = useState(false);
 	const editorContainerRef = useRef<HTMLDivElement>(null);
@@ -124,7 +88,7 @@ export function Cell({ cell, tabIndex }: Props) {
 						},
 					])),
 					keymap.of([indentWithTab, ...defaultKeymap]),
-					darkTheme,
+					...buildEditorExtensions(theme!),
 					EditorView.updateListener.of((update) => {
 						if (update.docChanged) {
 							updateCellSourceRef.current(
@@ -198,7 +162,7 @@ export function Cell({ cell, tabIndex }: Props) {
 			style={{
 				display: "flex",
 				flexDirection: "column",
-				borderBottom: "1px solid #2a2a2a",
+				borderBottom: "1px solid var(--border)",
 				position: "relative",
 			}}
 			onMouseEnter={() => setHovered(true)}
@@ -241,15 +205,15 @@ export function Cell({ cell, tabIndex }: Props) {
 						alignItems: "center",
 						paddingTop: 6,
 						gap: 4,
-						borderRight: "1px solid #2a2a2a",
-						backgroundColor: "#1a1a1a",
+					borderRight: "1px solid var(--editor-gutter-border)",
+					backgroundColor: "var(--editor-gutter-bg)",
 					}}
 				>
 					{/* Execution count label: [N] when set, empty otherwise */}
 					<span
 						style={{
 							fontSize: 10,
-							color: "#666",
+						color: "var(--editor-gutter-fg)",
 							fontFamily: "monospace",
 							minHeight: 14,
 							userSelect: "none",
@@ -267,8 +231,8 @@ export function Cell({ cell, tabIndex }: Props) {
 								border: "none",
 								cursor: "pointer",
 								color: cell.state === "running"
-									? "#ff9500"
-									: "#7ec8e3",
+						? "var(--warning)"
+						: "var(--accent)",
 								fontSize: 12,
 								padding: "2px 4px",
 								lineHeight: 1,
@@ -285,7 +249,7 @@ export function Cell({ cell, tabIndex }: Props) {
 					style={{
 						flex: 1,
 						minWidth: 0, // allow flex child to shrink below content width
-						backgroundColor: "#1e1e1e",
+					backgroundColor: "var(--editor-bg)",
 					}}
 				/>
 			</div>
@@ -313,10 +277,10 @@ function ControlButton({
 			title={title}
 			onClick={onClick}
 			style={{
-				background: "#333",
-				border: "1px solid #444",
+				background: "var(--bg-tertiary)",
+				border: "1px solid var(--border)",
 				borderRadius: 3,
-				color: "#aaa",
+				color: "var(--text-secondary)",
 				cursor: "pointer",
 				fontSize: 12,
 				lineHeight: 1,

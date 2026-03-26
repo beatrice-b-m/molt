@@ -24,6 +24,8 @@ pub struct AppSection {
     pub auto_launch: bool,
     #[serde(default = "default_tab_count")]
     pub tab_count: u8,
+    #[serde(default = "default_theme")]
+    pub theme: String,
 }
 
 fn default_python() -> PythonConfig {
@@ -40,6 +42,10 @@ fn default_tab_count() -> u8 {
     4
 }
 
+fn default_theme() -> String {
+    "github-dark".to_string()
+}
+
 impl Default for AppConfig {
     fn default() -> Self {
         Self {
@@ -54,6 +60,7 @@ impl Default for AppSection {
         Self {
             auto_launch: false,
             tab_count: default_tab_count(),
+            theme: default_theme(),
         }
     }
 }
@@ -87,8 +94,8 @@ pub fn load_config() -> AppConfig {
         }
         let default = AppConfig::default();
         let content = format!(
-            "[python]\n# Path to the Python interpreter to use for all kernels.\n# Supports absolute paths or names resolvable on PATH.\n# Default: \"python3\"\ninterpreter = \"{}\"\n\n[app]\n# Launch Molt automatically at macOS login.\nauto_launch = {}\n\n# Number of tabs. Currently fixed at 4; reserved for future use.\ntab_count = {}\n",
-            default.python.interpreter, default.app.auto_launch, default.app.tab_count,
+            "[python]\n# Path to the Python interpreter to use for all kernels.\n# Supports absolute paths or names resolvable on PATH.\n# Default: \"python3\"\ninterpreter = \"{}\"\n\n[app]\n# Launch Molt automatically at macOS login.\nauto_launch = {}\n\n# Number of tabs. Currently fixed at 4; reserved for future use.\ntab_count = {}\n\n# Theme to load at startup (filename without .json in ~/.config/molt/themes/).\ntheme = \"{}\"\n",
+            default.python.interpreter, default.app.auto_launch, default.app.tab_count, default.app.theme,
         );
         let _ = std::fs::write(&path, content);
         return default;
@@ -149,6 +156,7 @@ mod tests {
         assert_eq!(cfg.python.interpreter, "python3");
         assert_eq!(cfg.app.auto_launch, false);
         assert_eq!(cfg.app.tab_count, 4);
+        assert_eq!(cfg.app.theme, "github-dark");
     }
 
     #[test]
@@ -173,6 +181,7 @@ tab_count = 2
         assert_eq!(cfg.python.interpreter, "python3");
         assert_eq!(cfg.app.auto_launch, false);
         assert_eq!(cfg.app.tab_count, 4);
+        assert_eq!(cfg.app.theme, "github-dark");
     }
 
     #[test]
@@ -187,4 +196,15 @@ interpreter = "pypy3"
         assert_eq!(cfg.app.auto_launch, false);
         assert_eq!(cfg.app.tab_count, 4);
     }
+
+    #[test]
+    fn toml_parses_theme_field() {
+        let toml = r#"
+[app]
+theme = "github-light"
+"#;
+        let cfg: AppConfig = toml::from_str(toml).expect("parse failed");
+        assert_eq!(cfg.app.theme, "github-light");
+    }
+
 }

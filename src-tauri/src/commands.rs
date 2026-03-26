@@ -1,5 +1,6 @@
 use crate::config::ConfigState;
 use crate::kernel::{KernelManager, KernelResponse};
+use crate::theme;
 use tauri::State;
 
 #[tauri::command]
@@ -64,4 +65,21 @@ pub async fn get_config_warning(
         .lock()
         .map_err(|e| e.to_string())?;
     Ok(warning.clone())
+}
+
+
+#[tauri::command]
+pub fn list_themes() -> Vec<String> {
+    theme::list_theme_names()
+}
+
+#[tauri::command]
+pub fn load_theme(name: String) -> Result<String, String> {
+    theme::load_theme_by_name(&name)
+}
+
+#[tauri::command]
+pub fn load_active_theme() -> Result<String, String> {
+    let config = crate::config::load_config();
+    theme::load_theme_by_name(&config.app.theme)
 }

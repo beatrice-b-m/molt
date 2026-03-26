@@ -1,0 +1,55 @@
+{
+	"name": "GitHub Dark",
+	"type": "dark",
+	"ui": {
+		"background": "rgba(13, 17, 23, 0.85)",
+		"backgroundSecondary": "rgba(22, 27, 34, 0.8)",
+		"backgroundTertiary": "rgba(33, 38, 45, 0.8)",
+		"foreground": "#e6edf3",
+		"foregroundSecondary": "#8b949e",
+		"accent": "#58a6ff",
+		"border": "#30363d",
+		"success": "#3fb950",
+		"warning": "#d29922",
+		"error": "#f85149",
+		"scrollbarThumb": "#484f58"
+	},
+	"editor": {
+		"background": "#0d1117",
+		"foreground": "#e6edf3",
+		"cursor": "#e6edf3",
+		"selection": "#264f78",
+		"lineHighlight": "#161b22",
+		"gutterBackground": "#0d1117",
+		"gutterForeground": "#484f58",
+		"gutterBorder": "#30363d"
+	},
+	"syntax": {
+		"keyword": "#ff7b72",
+		"string": "#a5d6ff",
+		"number": "#79c0ff",
+		"comment": "#8b949e",
+		"function": "#d2a8ff",
+		"variable": "#ffa657",
+		"type": "#ffa657",
+		"operator": "#ff7b72",
+		"punctuation": "#e6edf3",
+		"property": "#79c0ff",
+		"constant": "#79c0ff",
+		"builtin": "#ffa657",
+		"decorator": "#d2a8ff"
+	},
+	"output": {
+		"background": "#161b22",
+		"foreground": "#e6edf3",
+		"stderr": "#d29922",
+		"errorForeground": "#f85149",
+		"errorBackground": "#200c0c"
+	},
+	"font": {
+		"editor": "'SF Mono', 'Fira Code', 'Consolas', monospace",
+		"editorSize": "13px",
+		"ui": "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+		"uiSize": "13px"
+	}
+}

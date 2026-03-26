@@ -1,5 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import "./styles.css";
+import { useThemeStore } from "./theme/store";
+import { applyThemeToCss } from "./theme/css";
+import { loadActiveTheme } from "./theme/load";
 import { TabBar } from "./components/TabBar";
 import { Toolbar } from "./components/Toolbar";
 import { Notebook } from "./components/Notebook";
@@ -12,7 +15,7 @@ function WarningBanner({ message }: { message: string }) {
 	return (
 		<div
 			style={{
-				background: "#3a2f00",
+				background: "var(--bg-tertiary)",
 				borderBottom: "1px solid var(--warning)",
 				color: "var(--warning)",
 				fontSize: 12,
@@ -41,9 +44,26 @@ export function App() {
 	const updateKernelState = useNotebookStore((s) => s.updateKernelState);
 
 	const [configWarning, setConfigWarning] = useState<string | null>(null);
+	const [themeLoaded, setThemeLoaded] = useState(false);
+	const setTheme = useThemeStore((s) => s.setTheme);
 
 	// Track the timestamp of the most recent 'd' keydown for DD detection.
 	const lastDKeyTime = useRef<number>(0);
+
+	// ── theme: load and apply before first render ────────────────────────────
+	useEffect(() => {
+		loadActiveTheme()
+			.then((theme) => {
+				applyThemeToCss(theme);
+				setTheme(theme);
+				setThemeLoaded(true);
+			})
+			.catch((e) => {
+				console.error("Failed to load theme", e);
+				setThemeLoaded(true); // render anyway with CSS defaults
+			});
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, []);
 
 	// ── boot: config warning + initial kernel ─────────────────────────────────
 	useEffect(() => {
@@ -135,6 +155,8 @@ export function App() {
 		deleteCell,
 		setFocusedCellId,
 	]);
+
+	if (!themeLoaded) return null;
 
 	return (
 		<div style={{ height: "100%", display: "flex", flexDirection: "column" }}>

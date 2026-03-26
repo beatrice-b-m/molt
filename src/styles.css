@@ -9,10 +9,25 @@
 	--success: #34c759;
 	--warning: #ffcc00;
 	--error: #ff3b30;
-	--stderr: #ff9500;
 	--border: #404040;
-	--font-mono: "SF Mono", "Menlo", "Monaco", "Courier New", monospace;
-	--font-system: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+	--scrollbar-thumb: #404040;
+	--editor-bg: #1e1e1e;
+	--editor-fg: #d4d4d4;
+	--editor-cursor: #d4d4d4;
+	--editor-selection: #264f78;
+	--editor-line-highlight: #252525;
+	--editor-gutter-bg: #1e1e1e;
+	--editor-gutter-fg: #555;
+	--editor-gutter-border: #333;
+	--output-bg: #161616;
+	--output-fg: #e8e8e8;
+	--output-stderr: #ff9500;
+	--output-error-fg: #ff3b30;
+	--output-error-bg: #1c0d0d;
+	--font-mono: 'SF Mono', 'Menlo', 'Monaco', 'Courier New', monospace;
+	--font-mono-size: 13px;
+	--font-system: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+	--font-system-size: 13px;
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -22,6 +37,7 @@ html, body, #root {
 	background: transparent;
 	color: var(--text-primary);
 	font-family: var(--font-system);
+	font-size: var(--font-system-size);
 	overflow: hidden;
 }
 
@@ -40,6 +56,6 @@ button, input, [data-no-drag] {
 	background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-	background: var(--border);
+	background: var(--scrollbar-thumb);
 	border-radius: 3px;
 }

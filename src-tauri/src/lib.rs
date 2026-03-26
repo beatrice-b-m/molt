@@ -3,6 +3,7 @@ use tauri::{Manager, RunEvent};
 mod commands;
 mod config;
 mod kernel;
+mod theme;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -16,6 +17,9 @@ pub fn run() {
             commands::ensure_kernel,
             commands::get_kernel_status,
             commands::get_config_warning,
+            commands::list_themes,
+            commands::load_theme,
+            commands::load_active_theme,
         ])
         .setup(|app| {
             // Validate Python interpreter at startup
@@ -24,6 +28,9 @@ pub fn run() {
                 log::warn!("Interpreter validation failed: {}", msg);
             }
             app.manage(config::ConfigState::new(warning));
+
+            // Copy bundled default themes to user config dir if needed
+            theme::ensure_default_themes(app.handle());
 
             // Initialize kernel manager
             app.manage(kernel::KernelManager::new(

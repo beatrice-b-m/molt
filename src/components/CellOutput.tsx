@@ -10,8 +10,8 @@ export function CellOutput({ outputs }: Props) {
 	return (
 		<div
 			style={{
-				borderTop: "1px solid #333",
-				backgroundColor: "#161616",
+				borderTop: "1px solid var(--border)",
+				backgroundColor: "var(--output-bg)",
 				padding: "8px 12px",
 				overflowX: "auto",
 			}}
@@ -26,15 +26,15 @@ export function CellOutput({ outputs }: Props) {
 function OutputItem({ output }: { output: CellOutputType }) {
 	const basePreStyle: React.CSSProperties = {
 		margin: 0,
-		fontFamily: "'SF Mono', 'Fira Code', 'Consolas', monospace",
-		fontSize: "12px",
+		fontFamily: "var(--font-mono)",
+		fontSize: "var(--font-mono-size)",
 		lineHeight: "1.5",
 		whiteSpace: "pre-wrap",
 		wordBreak: "break-word",
 	};
 
 	if (output.outputType === "stream") {
-		const color = output.streamName === "stderr" ? "#ff9500" : "#e8e8e8";
+		const color = output.streamName === "stderr" ? "var(--output-stderr)" : "var(--output-fg)";
 		return (
 			<pre style={{ ...basePreStyle, color }}>
 				{output.text ?? ""}
@@ -46,7 +46,7 @@ function OutputItem({ output }: { output: CellOutputType }) {
 		const raw = output.text ?? "";
 		const lines = raw.split("\n");
 		return (
-			<pre style={{ ...basePreStyle, color: "#ff3b30" }}>
+			<pre style={{ ...basePreStyle, color: "var(--output-error-fg)" }}>
 				{lines.map((line, i) =>
 					i === 0 ? (
 						<strong key={i}>{line}</strong>
