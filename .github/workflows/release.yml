@@ -37,21 +37,16 @@ jobs:
       - name: Install frontend dependencies
         run: bun install --frozen-lockfile
 
-      - name: Cache Cargo registry and build
-        uses: actions/cache@v4
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
         with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            src-tauri/target
-          key: release-${{ matrix.target }}-${{ hashFiles('src-tauri/Cargo.lock') }}
-          restore-keys: release-${{ matrix.target }}-
-
-      - name: Install Tauri CLI
-        run: cargo install tauri-cli --version "^2" --locked
+          workspaces: "./src-tauri -> target"
 
       - name: Build Tauri app
-        run: cargo tauri build --target ${{ matrix.target }}
+        uses: tauri-apps/tauri-action@v0
+        with:
+          args: --target ${{ matrix.target }}
+          tauriScript: bunx tauri
 
       - name: Prepare artifacts
         id: artifacts

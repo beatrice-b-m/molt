@@ -26,3 +26,11 @@ uuid = { version = "1", features = ["v4"] }
 dirs = "6"
 libc = "0.2"
 window-vibrancy = "0.6"
+
+
+# Fast CI builds: cargo build --profile ci
+# Skips optimizations to prioritise compile speed over runtime performance.
+[profile.ci]
+inherits = "dev"
+opt-level = 0
+codegen-units = 256
