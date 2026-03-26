@@ -1,0 +1,55 @@
+{
+	"name": "Dracula",
+	"type": "dark",
+	"ui": {
+		"background": "rgba(40, 42, 54, 0.85)",
+		"backgroundSecondary": "rgba(33, 34, 44, 0.8)",
+		"backgroundTertiary": "rgba(25, 26, 33, 0.8)",
+		"foreground": "#F8F8F2",
+		"foregroundSecondary": "#6272A4",
+		"accent": "#BD93F9",
+		"border": "#44475A",
+		"success": "#50FA7B",
+		"warning": "#FFB86C",
+		"error": "#FF5555",
+		"scrollbarThumb": "#44475A"
+	},
+	"editor": {
+		"background": "#282A36",
+		"foreground": "#F8F8F2",
+		"cursor": "#F8F8F2",
+		"selection": "#44475A",
+		"lineHighlight": "#343746",
+		"gutterBackground": "#282A36",
+		"gutterForeground": "#6272A4",
+		"gutterBorder": "#44475A"
+	},
+	"syntax": {
+		"keyword": "#FF79C6",
+		"string": "#F1FA8C",
+		"number": "#BD93F9",
+		"comment": "#6272A4",
+		"function": "#50FA7B",
+		"variable": "#F8F8F2",
+		"type": "#8BE9FD",
+		"operator": "#FF79C6",
+		"punctuation": "#F8F8F2",
+		"property": "#8BE9FD",
+		"constant": "#BD93F9",
+		"builtin": "#8BE9FD",
+		"decorator": "#50FA7B"
+	},
+	"output": {
+		"background": "#21222C",
+		"foreground": "#F8F8F2",
+		"stderr": "#FFB86C",
+		"errorForeground": "#FF5555",
+		"errorBackground": "#3b1e1e"
+	},
+	"font": {
+		"editor": "'SF Mono', 'Fira Code', 'Consolas', monospace",
+		"editorSize": "13px",
+		"ui": "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+		"uiSize": "13px"
+	}
+}

@@ -1,0 +1,55 @@
+{
+	"name": "Catppuccin Mocha",
+	"type": "dark",
+	"ui": {
+		"background": "rgba(30, 30, 46, 0.85)",
+		"backgroundSecondary": "rgba(24, 24, 37, 0.8)",
+		"backgroundTertiary": "rgba(17, 17, 27, 0.8)",
+		"foreground": "#cdd6f4",
+		"foregroundSecondary": "#a6adc8",
+		"accent": "#89b4fa",
+		"border": "#313244",
+		"success": "#a6e3a1",
+		"warning": "#f9e2af",
+		"error": "#f38ba8",
+		"scrollbarThumb": "#585b70"
+	},
+	"editor": {
+		"background": "#1e1e2e",
+		"foreground": "#cdd6f4",
+		"cursor": "#f5e0dc",
+		"selection": "#585b70",
+		"lineHighlight": "#181825",
+		"gutterBackground": "#1e1e2e",
+		"gutterForeground": "#7f849c",
+		"gutterBorder": "#313244"
+	},
+	"syntax": {
+		"keyword": "#cba6f7",
+		"string": "#a6e3a1",
+		"number": "#fab387",
+		"comment": "#7f849c",
+		"function": "#89b4fa",
+		"variable": "#cdd6f4",
+		"type": "#f9e2af",
+		"operator": "#94e2d5",
+		"punctuation": "#bac2de",
+		"property": "#89b4fa",
+		"constant": "#fab387",
+		"builtin": "#f38ba8",
+		"decorator": "#f5c2e7"
+	},
+	"output": {
+		"background": "#181825",
+		"foreground": "#cdd6f4",
+		"stderr": "#f9e2af",
+		"errorForeground": "#f38ba8",
+		"errorBackground": "#2a1f2a"
+	},
+	"font": {
+		"editor": "'SF Mono', 'Fira Code', 'Consolas', monospace",
+		"editorSize": "13px",
+		"ui": "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+		"uiSize": "13px"
+	}
+}
