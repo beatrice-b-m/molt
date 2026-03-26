@@ -1,6 +1,6 @@
 # Molt
 
-A macOS menu bar application providing a lightweight, always-available scratchpad of Python notebooks. Inspired by Tot's minimal multi-tab design, with executable Python cells per tab backed by isolated kernels.
+A macOS desktop application for quick Python computation. Four independent notebook tabs, each backed by an isolated Python kernel, with full syntax highlighting and customizable themes.
 
 ## Install
 
@@ -9,7 +9,7 @@ Precompiled `.dmg` installers for macOS are available on the [Releases](../../re
 - **Apple Silicon** (M1/M2/M3/M4): `Molt_<version>_aarch64.dmg`
 - **Intel**: `Molt_<version>_x86_64.dmg`
 
-Download the `.dmg` for your architecture, open it, and drag Molt to Applications. The only runtime requirement is **Python 3** (`python3` on PATH or configured in `~/.config/molt/config.toml`).
+Download the `.dmg` for your architecture, open it, and drag Molt to Applications. The only runtime requirement is **Python 3** (`python3` on PATH or configured in Settings).
 
 > **macOS Gatekeeper notice:** Release builds are not yet Apple-notarized. On first launch macOS may report the app is "damaged and can't be opened." To fix this, run:
 >
@@ -17,47 +17,86 @@ Download the `.dmg` for your architecture, open it, and drag Molt to Application
 > xattr -cr /Applications/Molt.app
 > ```
 >
-> Then open the app normally. This removes the quarantine flag macOS applies to unsigned downloads.
+> Then open the app normally.
 
-## Development Prerequisites
+## Features
+
+- **4 independent notebook tabs** with isolated Python kernels (no shared state between tabs)
+- **Jupyter-style execution** -- Shift+Enter runs a cell and advances, last expression auto-displays
+- **Syntax highlighting** via CodeMirror 6 with full Python token coverage
+- **Customizable themes** -- JSON theme files in `~/.config/molt/themes/`; ships with GitHub Dark and GitHub Light
+- **Settings window** (File > Settings) for theme selection, Python interpreter path, and launch-at-login
+- **Native macOS integration** -- vibrancy effect, standard Edit menu shortcuts, menu bar
+
+## Keyboard Shortcuts
+
+| Shortcut            | Action                        |
+| ------------------- | ----------------------------- |
+| `Shift+Enter`       | Run cell, advance/create next |
+| `Cmd+Enter`         | Run cell, keep focus          |
+| `Cmd+Shift+Enter`   | Run all cells in tab          |
+| `Cmd+1..4`          | Switch to tab N               |
+| `Esc`               | Enter command mode            |
+| `A` (command mode)  | Insert cell above             |
+| `B` (command mode)  | Insert cell below             |
+| `DD` (command mode) | Delete focused cell           |
+
+## Configuration
+
+Settings are accessible from File > Settings, or by editing `~/.config/molt/config.toml` directly:
+
+```toml
+[python]
+interpreter = "python3"    # Absolute path or PATH-resolvable name
+
+[app]
+auto_launch = false         # Start Molt at macOS login
+tab_count = 4               # Fixed at 4
+theme = "github-dark"       # Theme filename (without .json) from ~/.config/molt/themes/
+```
+
+If the configured Python interpreter is not found, a warning banner appears in the app.
+
+### Themes
+
+Theme JSON files live in `~/.config/molt/themes/`. Two defaults are bundled and copied there on first launch. Each theme controls UI chrome, editor colors, syntax highlighting, cell output styling, and fonts. See the bundled themes for the schema.
+
+## Development
+
+### Prerequisites
 
 - **macOS** 10.15+
 - **Rust** 1.77+ with `cargo`
 - **Bun** (frontend package manager)
-- **Python 3** (`python3` on PATH or configured in `~/.config/molt/config.toml`)
+- **Python 3** on PATH
 - **Tauri CLI**: `cargo install tauri-cli --version "^2"`
 
-## Setup
+### Setup
 
 ```bash
-# Install frontend dependencies
 bun install
 ```
 
-## Development
+### Run
 
 ```bash
-# Run in development mode (hot-reload frontend + Rust rebuild)
 bun run dev
 # or directly:
 cargo tauri dev
 ```
 
-The app launches as a **menu bar icon** (no Dock icon). Click the tray icon to toggle the notebook panel.
-
-## Production Build
+### Production Build
 
 ```bash
-bun run build:app
 bun run build:app
 ```
 
-> **Note:** DMG bundling runs an AppleScript to customize Finder appearance. This hangs in non-GUI environments (e.g. tmux, SSH). The `build:app` script sets `CI=true` to skip that step. The resulting DMG works identically; only the icon layout inside the mounted volume is uncustomized.
+> **Note:** DMG bundling runs an AppleScript to customize Finder appearance. This hangs in non-GUI environments (e.g. tmux, SSH). The `build:app` script sets `CI=true` to skip that step.
 
-## Testing
+### Testing
 
 ```bash
-# Rust tests (config parsing)
+# Rust tests
 cd src-tauri && cargo test
 
 # Rust lint
@@ -76,56 +115,34 @@ bun run typecheck
 bun run lint
 ```
 
-## Configuration
-
-On first launch, a config file is created at `~/.config/molt/config.toml`:
-
-```toml
-[python]
-interpreter = "python3"  # Absolute path or PATH-resolvable name
-
-[app]
-auto_launch = false
-tab_count = 4
-```
-
-If the configured Python interpreter is not found, a warning banner appears in the app.
-
 ## Architecture
 
-- **Rust backend** (`src-tauri/`): Tauri v2 app with system tray, window management, and kernel process lifecycle via `tokio`
+- **Rust backend** (`src-tauri/`): Tauri v2 app with native menu bar, multi-window management, and kernel process lifecycle via `tokio`
 - **Frontend** (`src/`): React + TypeScript + Zustand + CodeMirror 6 in macOS WKWebView
 - **Python kernels** (`src-tauri/resources/kernel_server.py`): Pure stdlib REPL server, one per tab, communicating via newline-delimited JSON on stdin/stdout
 
-### Keyboard Shortcuts
-
-| Shortcut            | Action                        |
-| ------------------- | ----------------------------- |
-| `Shift+Enter`       | Run cell, advance/create next |
-| `Cmd+Enter`         | Run cell, keep focus          |
-| `Cmd+Shift+Enter`   | Run all cells in tab          |
-| `Cmd+1..4`          | Switch to tab N               |
-| `Esc`               | Enter command mode            |
-| `A` (command mode)  | Insert cell above             |
-| `B` (command mode)  | Insert cell below             |
-| `DD` (command mode) | Delete focused cell           |
-
-## Project Structure
+### Project Structure
 
 ```
 molt/
 ├── src-tauri/
 │   ├── src/
 │   │   ├── main.rs           # App entry
-│   │   ├── lib.rs            # Tray, window, vibrancy, shutdown
+│   │   ├── lib.rs            # Menu, windows, vibrancy, shutdown
 │   │   ├── kernel.rs         # Kernel subprocess manager
-│   │   ├── config.rs         # Config reading/validation
-│   │   └── commands.rs       # Tauri IPC command handlers
+│   │   ├── config.rs         # Config read/write/validation
+│   │   ├── commands.rs       # Tauri IPC command handlers
+│   │   └── theme.rs          # Theme file I/O
 │   ├── resources/
-│   │   └── kernel_server.py  # Python REPL server (stdlib only)
+│   │   ├── kernel_server.py  # Python REPL server (stdlib only)
+│   │   └── themes/           # Bundled default theme JSON files
 │   └── tauri.conf.json
 ├── src/
-│   ├── App.tsx               # Root layout + global shortcuts
+│   ├── App.tsx               # Main window root + global shortcuts
+│   ├── main.tsx              # Main window React entry
+│   ├── settings-main.tsx     # Settings window React entry
+│   ├── pages/
+│   │   └── Settings.tsx      # Settings window UI
 │   ├── components/
 │   │   ├── TabBar.tsx         # 4-tab selector
 │   │   ├── Toolbar.tsx        # Kernel status, restart/stop/run-all
@@ -137,8 +154,16 @@ molt/
 │   ├── hooks/
 │   │   ├── useKernel.ts       # Tauri invoke wrappers
 │   │   └── execution.ts       # Cell execution logic
+│   ├── theme/
+│   │   ├── store.ts           # Theme Zustand store
+│   │   ├── load.ts            # Tauri invoke wrappers for themes
+│   │   ├── css.ts             # Applies theme to CSS custom properties
+│   │   └── codemirror.ts      # Builds CodeMirror theme + syntax highlighting
 │   └── types/
-│       └── notebook.ts        # Shared TypeScript types
+│       ├── notebook.ts        # Notebook/cell types
+│       └── theme.ts           # Theme JSON schema types
+├── settings.html              # Settings window HTML entry
+├── index.html                 # Main window HTML entry
 └── tests/
     └── python/
         └── test_kernel_server.py
