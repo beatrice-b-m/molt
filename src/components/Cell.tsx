@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { EditorView, keymap } from "@codemirror/view";
-import { EditorState, Prec } from "@codemirror/state";
+import { Compartment, EditorState, Prec } from "@codemirror/state";
 import { python } from "@codemirror/lang-python";
 import { defaultKeymap, indentWithTab } from "@codemirror/commands";
 import { basicSetup } from "codemirror";
@@ -36,6 +36,7 @@ export function Cell({ cell, tabIndex }: Props) {
 	const [hovered, setHovered] = useState(false);
 	const editorContainerRef = useRef<HTMLDivElement>(null);
 	const viewRef = useRef<EditorView | null>(null);
+	const themeCompartment = useRef(new Compartment());
 
 	// These values are stable for the lifetime of a Cell instance.
 	const cellIdRef = useRef(cell.id);
@@ -88,7 +89,7 @@ export function Cell({ cell, tabIndex }: Props) {
 						},
 					])),
 					keymap.of([indentWithTab, ...defaultKeymap]),
-					...buildEditorExtensions(theme!),
+					themeCompartment.current.of(buildEditorExtensions(theme!)),
 					EditorView.updateListener.of((update) => {
 						if (update.docChanged) {
 							updateCellSourceRef.current(
@@ -111,7 +112,20 @@ export function Cell({ cell, tabIndex }: Props) {
 			view.destroy();
 			viewRef.current = null;
 		};
-	}, []);
+	}, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+	// ------------------------------------------------------------------
+	// Reconfigure CodeMirror theme when the Zustand theme store changes.
+	// Uses the Compartment API for efficient extension replacement
+	// without destroying the editor.
+	// ------------------------------------------------------------------
+	useEffect(() => {
+		const view = viewRef.current;
+		if (!view || !theme) return;
+		view.dispatch({
+			effects: themeCompartment.current.reconfigure(buildEditorExtensions(theme)),
+		});
+	}, [theme]);
 
 	// ------------------------------------------------------------------
 	// Sync store → editor when source changes from outside this editor

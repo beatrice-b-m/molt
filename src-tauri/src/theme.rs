@@ -16,24 +16,39 @@ pub fn ensure_default_themes(app_handle: &tauri::AppHandle) {
         return;
     }
 
-    let defaults = ["github-dark.json", "github-light.json"];
-    for filename in &defaults {
+    // Scan bundled themes directory and copy any .json files that don't
+    // already exist in the user themes dir. This auto-discovers new themes
+    // added to resources/themes/ without maintaining a hardcoded list.
+    let src_dir = match app_handle.path().resource_dir() {
+        Ok(d) => d.join("resources").join("themes"),
+        Err(e) => {
+            log::warn!("ensure_default_themes: could not resolve resource dir: {}", e);
+            return;
+        }
+    };
+
+    let entries = match std::fs::read_dir(&src_dir) {
+        Ok(e) => e,
+        Err(e) => {
+            log::warn!("ensure_default_themes: could not read {:?}: {}", src_dir, e);
+            return;
+        }
+    };
+
+    for entry in entries.filter_map(|e| e.ok()) {
+        let src = entry.path();
+        if src.extension().and_then(|e| e.to_str()) != Some("json") {
+            continue;
+        }
+        let Some(filename) = src.file_name() else { continue };
         let dest = dir.join(filename);
         if dest.exists() {
             continue;
         }
-        // Resolve bundled resource path following the same pattern as resolve_kernel_script_path
-        let src = app_handle
-            .path()
-            .resource_dir()
-            .ok()
-            .map(|d: PathBuf| d.join("resources").join("themes").join(filename))
-            .unwrap_or_else(|| PathBuf::from(format!("resources/themes/{}", filename)));
-
         if let Err(e) = std::fs::copy(&src, &dest) {
             log::warn!(
-                "ensure_default_themes: could not copy {} ({:?} -> {:?}): {}",
-                filename, src, dest, e
+                "ensure_default_themes: could not copy {:?} -> {:?}: {}",
+                src, dest, e
             );
         }
     }
