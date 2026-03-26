@@ -48,10 +48,10 @@ export function SettingsForm() {
 			app: { ...prev.app, theme: name },
 		}));
 		loadThemeByName(name)
-			.then((theme) => {
-				applyThemeToCss(theme);
-				emit("theme-changed", { name });
-			})
+		.then((theme) => {
+			applyThemeToCss(theme);
+			return emit("theme-changed", { name });
+		})
 			.catch((e) => console.error("Theme preview failed", e));
 	}
 
