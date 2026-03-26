@@ -66,6 +66,8 @@ export function Cell({ cell, tabIndex }: Props) {
 	const moveCellUp = useNotebookStore((s) => s.moveCellUp);
 	const moveCellDown = useNotebookStore((s) => s.moveCellDown);
 	const updateCellSource = useNotebookStore((s) => s.updateCellSource);
+	const focusedCellId = useNotebookStore((s) => s.focusedCellId);
+	const setFocusedCellId = useNotebookStore((s) => s.setFocusedCellId);
 
 	const [hovered, setHovered] = useState(false);
 	const editorContainerRef = useRef<HTMLDivElement>(null);
@@ -163,6 +165,18 @@ export function Cell({ cell, tabIndex }: Props) {
 			});
 		}
 	}, [cell.source]);
+
+	// ------------------------------------------------------------------
+	// Focus this editor when the store requests it (Jupyter-style advance).
+	// Clear focusedCellId after consuming so a repeat run of the same
+	// predecessor can re-trigger the focus.
+	// ------------------------------------------------------------------
+	useEffect(() => {
+		if (focusedCellId === cell.id && viewRef.current) {
+			viewRef.current.focus();
+			setFocusedCellId(null);
+		}
+	}, [focusedCellId, cell.id, setFocusedCellId]);
 
 	// ------------------------------------------------------------------
 	// Run / interrupt handler

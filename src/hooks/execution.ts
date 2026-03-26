@@ -75,4 +75,15 @@ export async function executeSingleCell(tabIndex: number, cellId: string): Promi
 	if (nb && nb.cells.length > 0 && nb.cells[nb.cells.length - 1].id === cellId) {
 		updated.addCell(tabIndex, cellId);
 	}
+
+	// Advance focus to the next cell (Jupyter convention).
+	// Re-read state so the auto-appended cell (if any) is visible.
+	const latest = useNotebookStore.getState();
+	const fnb = latest.notebooks.find((n) => n.tabIndex === tabIndex);
+	if (fnb) {
+		const idx = fnb.cells.findIndex((c) => c.id === cellId);
+		if (idx >= 0 && idx < fnb.cells.length - 1) {
+			latest.setFocusedCellId(fnb.cells[idx + 1].id);
+		}
+	}
 }
