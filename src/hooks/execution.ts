@@ -18,17 +18,6 @@ export async function executeSingleCell(tabIndex: number, cellId: string): Promi
 	// Empty source: no-op — caller decides whether to advance focus.
 	if (!cell.source.trim()) return;
 
-	// Kernel unavailable — surface an inline error instead of hanging.
-	if (notebook.kernelState === "stopped" || notebook.kernelState === "error") {
-		store.setCellOutputs(tabIndex, cellId, [
-			{
-				outputType: "error",
-				text: "Kernel is not running. Restart to continue.",
-			},
-		]);
-		store.setCellState(tabIndex, cellId, "error");
-		return;
-	}
 
 	// Ensure the kernel is fully started before sending work.
 	try {

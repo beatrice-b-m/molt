@@ -25,12 +25,6 @@ html, body, #root {
 	overflow: hidden;
 }
 
-/* Draggable region at top for borderless window */
-.drag-region {
-	height: 28px;
-	-webkit-app-region: drag;
-	app-region: drag;
-}
 
 /* Make buttons/interactive elements not draggable */
 button, input, [data-no-drag] {

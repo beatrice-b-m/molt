@@ -61,10 +61,6 @@ export function Toolbar() {
 	};
 
 	const handleRunAll = async () => {
-		if (kernelStopped) {
-			window.alert("Kernel is not running. Restart to continue.");
-			return;
-		}
 		const cells = useNotebookStore.getState().notebooks[activeTab].cells;
 		for (const cell of cells) {
 			if (cell.source.trim()) {
@@ -100,7 +96,7 @@ export function Toolbar() {
 			>
 				{kernelState}
 			</span>
-			<button onClick={handleRunAll} style={buttonStyle} disabled={kernelStopped}>
+			<button onClick={handleRunAll} style={buttonStyle}>
 				Run All
 			</button>
 			<button onClick={handleRestart} style={buttonStyle}>

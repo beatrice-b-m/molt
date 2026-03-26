@@ -138,8 +138,6 @@ export function App() {
 
 	return (
 		<div style={{ height: "100%", display: "flex", flexDirection: "column" }}>
-			{/* Borderless window drag region */}
-			<div className="drag-region" />
 
 			{/* Config warning banner — only shown when present */}
 			{configWarning && <WarningBanner message={configWarning} />}

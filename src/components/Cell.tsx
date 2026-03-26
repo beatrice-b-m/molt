@@ -66,9 +66,6 @@ export function Cell({ cell, tabIndex }: Props) {
 	const moveCellUp = useNotebookStore((s) => s.moveCellUp);
 	const moveCellDown = useNotebookStore((s) => s.moveCellDown);
 	const updateCellSource = useNotebookStore((s) => s.updateCellSource);
-	const kernelState = useNotebookStore(
-		(s) => s.notebooks.find((nb) => nb.tabIndex === tabIndex)?.kernelState ?? "stopped",
-	);
 
 	const [hovered, setHovered] = useState(false);
 	const editorContainerRef = useRef<HTMLDivElement>(null);
@@ -179,12 +176,8 @@ export function Cell({ cell, tabIndex }: Props) {
 		}
 	}
 
-	const kernelStopped = kernelState === "stopped" || kernelState === "error";
 	const runButtonContent = cell.state === "running" ? "■" : "▶";
 	const runButtonTitle = cell.state === "running" ? "Interrupt" : "Run cell";
-	// Disable run when kernel is stopped, unless the cell is already running
-	// (interrupt must remain available).
-	const runButtonDisabled = kernelStopped && cell.state !== "running";
 
 	return (
 		<div
@@ -252,25 +245,22 @@ export function Cell({ cell, tabIndex }: Props) {
 					</span>
 
 					{/* Run / interrupt button */}
-					<button
-						title={runButtonTitle}
-						disabled={runButtonDisabled}
-						onClick={handleRunClick}
-						style={{
-							background: "none",
-							border: "none",
-							cursor: runButtonDisabled ? "default" : "pointer",
-							color: runButtonDisabled
-								? "#444"
-								: cell.state === "running"
+						<button
+							title={runButtonTitle}
+							onClick={handleRunClick}
+							style={{
+								background: "none",
+								border: "none",
+								cursor: "pointer",
+								color: cell.state === "running"
 									? "#ff9500"
 									: "#7ec8e3",
-							fontSize: 12,
-							padding: "2px 4px",
-							lineHeight: 1,
-							userSelect: "none",
-						}}
-					>
+								fontSize: 12,
+								padding: "2px 4px",
+								lineHeight: 1,
+								userSelect: "none",
+							}}
+						>
 						{runButtonContent}
 					</button>
 				</div>
