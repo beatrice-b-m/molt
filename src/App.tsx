@@ -2,12 +2,13 @@ import { useEffect, useRef, useState } from "react";
 import "./styles.css";
 import { useThemeStore } from "./theme/store";
 import { applyThemeToCss } from "./theme/css";
-import { loadActiveTheme } from "./theme/load";
+import { loadActiveTheme, loadThemeByName } from "./theme/load";
 import { TabBar } from "./components/TabBar";
 import { Toolbar } from "./components/Toolbar";
 import { Notebook } from "./components/Notebook";
 import { useNotebookStore } from "./store/notebookStore";
 import { ensureKernel, getConfigWarning } from "./hooks/useKernel";
+import { listen } from "@tauri-apps/api/event";
 
 // ─── WarningBanner ────────────────────────────────────────────────────────────
 
@@ -62,6 +63,20 @@ export function App() {
 				console.error("Failed to load theme", e);
 				setThemeLoaded(true); // render anyway with CSS defaults
 			});
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, []);
+
+	// ── theme: react to changes from the settings window ─────────────────────
+	useEffect(() => {
+		const unlisten = listen<{ name: string }>("theme-changed", (event) => {
+			loadThemeByName(event.payload.name)
+				.then((theme) => {
+					applyThemeToCss(theme);
+					setTheme(theme);
+				})
+				.catch((e) => console.error("Theme sync failed", e));
+		});
+		return () => { unlisten.then((f) => f()); };
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 

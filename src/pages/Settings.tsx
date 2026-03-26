@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { emit } from "@tauri-apps/api/event";
 import { loadActiveTheme, loadThemeByName } from "../theme/load";
 import { applyThemeToCss } from "../theme/css";
 
@@ -47,7 +48,10 @@ export function SettingsForm() {
 			app: { ...prev.app, theme: name },
 		}));
 		loadThemeByName(name)
-			.then((theme) => applyThemeToCss(theme))
+			.then((theme) => {
+				applyThemeToCss(theme);
+				emit("theme-changed", { name });
+			})
 			.catch((e) => console.error("Theme preview failed", e));
 	}
 
