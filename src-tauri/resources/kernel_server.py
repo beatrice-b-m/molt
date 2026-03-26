@@ -8,6 +8,7 @@ Protocol:
   Response: {"id": "<uuid>", "type": "result", "stdout": "...", "stderr": "...", "error": null|"...", "output_type": "text"}
 """
 
+import ast
 import io
 import json
 import signal
@@ -28,31 +29,55 @@ def _handle_sigint(signum, frame):
 
 
 def execute_code(code):
-    """Execute code in the persistent namespace, capturing stdout/stderr/errors."""
-    stdout_capture = io.StringIO()
-    stderr_capture = io.StringIO()
+	"""Execute code in the persistent namespace, capturing stdout/stderr/errors.
 
-    old_stdout = sys.stdout
-    old_stderr = sys.stderr
+	Jupyter-style: if the last statement is a bare expression, its value is
+	printed (via repr) unless it is None.
+	"""
+	stdout_capture = io.StringIO()
+	stderr_capture = io.StringIO()
 
-    error = None
-    try:
-        sys.stdout = stdout_capture
-        sys.stderr = stderr_capture
-        exec(compile(code, "<cell>", "exec"), _globals)
-    except KeyboardInterrupt:
-        error = "KeyboardInterrupt: Execution interrupted"
-    except Exception:
-        error = traceback.format_exc()
-    finally:
-        sys.stdout = old_stdout
-        sys.stderr = old_stderr
+	old_stdout = sys.stdout
+	old_stderr = sys.stderr
 
-    return {
-        "stdout": stdout_capture.getvalue(),
-        "stderr": stderr_capture.getvalue(),
-        "error": error,
-    }
+	error = None
+	try:
+		sys.stdout = stdout_capture
+		sys.stderr = stderr_capture
+
+		tree = ast.parse(code, "<cell>", "exec")
+
+		# Split off the last statement if it is a bare expression,
+		# so we can capture and display its value.
+		last_expr = None
+		if tree.body and isinstance(tree.body[-1], ast.Expr):
+			last_expr = tree.body.pop()
+
+		# Execute preceding statements.
+		if tree.body:
+			exec(compile(tree, "<cell>", "exec"), _globals)
+
+		# Evaluate the trailing expression and display if non-None.
+		if last_expr is not None:
+			expr_ast = ast.Expression(body=last_expr.value)
+			ast.fix_missing_locations(expr_ast)
+			result = eval(compile(expr_ast, "<cell>", "eval"), _globals)
+			if result is not None:
+				_globals["_"] = result
+				print(repr(result))
+	except KeyboardInterrupt:
+		error = "KeyboardInterrupt: Execution interrupted"
+	except Exception:
+		error = traceback.format_exc()
+	finally:
+		sys.stdout = old_stdout
+		sys.stderr = old_stderr
+
+	return {
+		"stdout": stdout_capture.getvalue(),
+		"stderr": stderr_capture.getvalue(),
+		"error": error,
+	}
 
 
 def handle_request(request):
