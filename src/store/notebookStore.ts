@@ -95,6 +95,10 @@ export interface NotebookStore {
 	 * Called once per cell run so counts are monotonically increasing per tab.
 	 */
 	incrementExecutionCounter: (tabIndex: number) => number;
+	/** Replace cell contents from persisted data (source only, no outputs). */
+	initializeFromPersisted: (tabs: Array<{ tabIndex: number; cells: Array<{ id: string; type: "code" | "markdown"; source: string }> }>) => void;
+	/** Reset a tab to a single empty cell, clearing all content. */
+	clearTab: (tabIndex: number) => void;
 }
 
 // ─── store implementation ─────────────────────────────────────────────────────
@@ -254,5 +258,36 @@ export const useNotebookStore = create<NotebookStore>((set, get) => ({
 			}),
 		}));
 		return next;
+	},
+
+	initializeFromPersisted: (tabs) => {
+		set((s) => ({
+			notebooks: s.notebooks.map((nb) => {
+				const entry = tabs.find((t) => t.tabIndex === nb.tabIndex);
+				if (!entry) return nb;
+				const cells: Cell[] =
+					entry.cells.length > 0
+						? entry.cells.map((pc) => ({
+								id: pc.id,
+								type: pc.type,
+								source: pc.source,
+								executionCount: null,
+								outputs: [],
+								state: "idle" as const,
+							}))
+						: [makeCell()];
+				return { ...nb, cells };
+			}),
+		}));
+	},
+
+	clearTab: (tabIndex) => {
+		set((s) => ({
+			notebooks: s.notebooks.map((nb) =>
+				nb.tabIndex !== tabIndex
+					? nb
+					: { ...nb, cells: [makeCell()], executionCounter: 0 },
+			),
+		}));
 	},
 }));

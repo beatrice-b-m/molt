@@ -96,3 +96,13 @@ pub fn save_config(config: String) -> Result<(), String> {
         serde_json::from_str(&config).map_err(|e| format!("Invalid config: {}", e))?;
     crate::config::save_config(&parsed)
 }
+
+#[tauri::command]
+pub fn load_notebooks() -> Result<Option<String>, String> {
+	crate::persistence::load_notebooks()
+}
+
+#[tauri::command]
+pub fn save_notebooks(data: String) -> Result<(), String> {
+	crate::persistence::save_notebooks(&data)
+}

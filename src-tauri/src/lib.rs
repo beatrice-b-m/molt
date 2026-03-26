@@ -5,6 +5,7 @@ mod commands;
 mod config;
 mod kernel;
 mod theme;
+mod persistence;
 
 /// Opens (or focuses) the settings window.
 fn open_settings_window(app_handle: &tauri::AppHandle) {
@@ -45,6 +46,8 @@ pub fn run() {
             commands::load_active_theme,
             commands::get_config,
             commands::save_config,
+			commands::load_notebooks,
+			commands::save_notebooks,
         ])
         .setup(|app| {
             // Validate Python interpreter at startup

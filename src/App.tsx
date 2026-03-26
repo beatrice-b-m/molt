@@ -8,6 +8,7 @@ import { Toolbar } from "./components/Toolbar";
 import { Notebook } from "./components/Notebook";
 import { useNotebookStore } from "./store/notebookStore";
 import { ensureKernel, getConfigWarning } from "./hooks/useKernel";
+import { usePersistence } from "./hooks/usePersistence";
 import { listen } from "@tauri-apps/api/event";
 
 // ─── WarningBanner ────────────────────────────────────────────────────────────
@@ -46,6 +47,7 @@ export function App() {
 
 	const [configWarning, setConfigWarning] = useState<string | null>(null);
 	const [themeLoaded, setThemeLoaded] = useState(false);
+	const notebooksLoaded = usePersistence();
 	const setTheme = useThemeStore((s) => s.setTheme);
 
 	// Track the timestamp of the most recent 'd' keydown for DD detection.
@@ -171,7 +173,7 @@ export function App() {
 		setFocusedCellId,
 	]);
 
-	if (!themeLoaded) return null;
+	if (!themeLoaded || !notebooksLoaded) return null;
 
 	return (
 		<div style={{ height: "100%", display: "flex", flexDirection: "column" }}>

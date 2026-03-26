@@ -24,6 +24,7 @@ export function Toolbar() {
 	const activeTab = useNotebookStore((s) => s.activeTab);
 	const notebook = useNotebookStore((s) => s.notebooks[s.activeTab]);
 	const updateKernelState = useNotebookStore((s) => s.updateKernelState);
+	const clearTab = useNotebookStore((s) => s.clearTab);
 
 	const kernelState = notebook.kernelState;
 	const kernelStopped = kernelState === "stopped" || kernelState === "error";
@@ -69,6 +70,12 @@ export function Toolbar() {
 		}
 	};
 
+	const handleClear = () => {
+		if (window.confirm("Clear all cells in this tab?")) {
+			clearTab(activeTab);
+		}
+	};
+
 	return (
 		<div
 			style={{
@@ -91,11 +98,13 @@ export function Toolbar() {
 				}}
 				title={kernelState}
 			/>
-			<span
-				style={{ fontSize: 11, color: "var(--text-secondary)", flexGrow: 1 }}
-			>
+			<span style={{ fontSize: 11, color: "var(--text-secondary)" }}>
 				{kernelState}
 			</span>
+			<button onClick={handleClear} style={buttonStyle}>
+				Clear
+			</button>
+			<div style={{ flexGrow: 1 }} />
 			<button onClick={handleRunAll} style={buttonStyle}>
 				Run All
 			</button>
