@@ -42,11 +42,13 @@ jobs:
         with:
           workspaces: "./src-tauri -> target"
 
+      - name: Install Tauri CLI
+        run: |
+          curl -L --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh | bash
+          cargo binstall tauri-cli --no-confirm
+
       - name: Build Tauri app
-        uses: tauri-apps/tauri-action@v0
-        with:
-          args: --target ${{ matrix.target }}
-          tauriScript: bunx tauri
+        run: cargo tauri build --target ${{ matrix.target }}
 
       - name: Prepare artifacts
         id: artifacts
