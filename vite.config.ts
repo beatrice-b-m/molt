@@ -1,3 +1,4 @@
+import { resolve } from "path";
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
@@ -21,6 +22,12 @@ export default defineConfig({
 	envPrefix: ["VITE_", "TAURI_"],
 
 	build: {
+		rollupOptions: {
+			input: {
+				main: resolve(__dirname, "index.html"),
+				settings: resolve(__dirname, "settings.html"),
+			},
+		},
 		// Tauri uses Chromium on Windows and WebKit on macOS/Linux
 		target: "safari14",
 		// Don't minify for debug builds

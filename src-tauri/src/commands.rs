@@ -83,3 +83,16 @@ pub fn load_active_theme() -> Result<String, String> {
     let config = crate::config::load_config();
     theme::load_theme_by_name(&config.app.theme)
 }
+
+#[tauri::command]
+pub fn get_config() -> Result<String, String> {
+    let config = crate::config::load_config();
+    serde_json::to_string(&config).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub fn save_config(config: String) -> Result<(), String> {
+    let parsed: crate::config::AppConfig =
+        serde_json::from_str(&config).map_err(|e| format!("Invalid config: {}", e))?;
+    crate::config::save_config(&parsed)
+}

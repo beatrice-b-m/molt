@@ -107,6 +107,19 @@ pub fn load_config() -> AppConfig {
     }
 }
 
+/// Writes the given config to disk, preserving human-readable formatting.
+pub fn save_config(config: &AppConfig) -> Result<(), String> {
+    let path = config_path();
+    if let Some(parent) = path.parent() {
+        std::fs::create_dir_all(parent).map_err(|e| format!("Failed to create config directory: {}", e))?;
+    }
+    let content = format!(
+        "[python]\n# Path to the Python interpreter to use for all kernels.\n# Supports absolute paths or names resolvable on PATH.\n# Default: \"python3\"\ninterpreter = \"{}\"\n\n[app]\n# Launch Molt automatically at macOS login.\nauto_launch = {}\n\n# Number of tabs. Currently fixed at 4; reserved for future use.\ntab_count = {}\n\n# Theme to load at startup (filename without .json in ~/.config/molt/themes/).\ntheme = \"{}\"\n",
+        config.python.interpreter, config.app.auto_launch, config.app.tab_count, config.app.theme,
+    );
+    std::fs::write(&path, content).map_err(|e| format!("Failed to write config: {}", e))
+}
+
 /// Resolves the configured interpreter string.
 pub fn resolve_interpreter() -> String {
     load_config().python.interpreter
