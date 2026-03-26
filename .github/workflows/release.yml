@@ -43,6 +43,8 @@ jobs:
           workspaces: "./src-tauri -> target"
 
       - name: Install Tauri CLI
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           curl -L --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh | bash
           cargo binstall tauri-cli --no-confirm
