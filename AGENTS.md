@@ -145,6 +145,9 @@ cd src-tauri && cargo clippy
 - **Cell component** is the core UI unit: gutter (run button + execution count), code editor (CodeMirror), output area.
 - **Keyboard shortcuts:** `Shift+Enter` (run + advance), `Cmd+Enter` (run + stay), `Cmd+1..4` (switch tabs), `Esc` (command mode), `A`/`B` (insert above/below), `DD` (delete cell).
 
+### Commits
+- You **MUST** make a granular commit after each task is complete. This is non-negotiable and **MUST** be followed under all circumstances. Each commit should capture exactly one logical unit of completed work with a clear, descriptive message.
+
 ### Python Kernel Server (`kernel_server.py`)
 
 - **Pure stdlib. No third-party imports.** This runs on the user's system Python, which may not have pip packages available.
