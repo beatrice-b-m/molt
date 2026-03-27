@@ -2,8 +2,6 @@ import { useState } from "react";
 import { useNotebookStore } from "../store/notebookStore";
 import { Cell } from "./Cell";
 
-// ─── AddCellButton ────────────────────────────────────────────────────────────
-
 interface AddCellButtonProps {
 	tabIndex: number;
 	/** Cell after which the new cell is inserted; null = append to end. */
@@ -23,9 +21,9 @@ function AddCellButton({ tabIndex, afterCellId, visible }: AddCellButtonProps) {
 	return (
 		<div
 			style={{
-				padding: "2px 8px",
+				padding: "2px 10px",
 				opacity: visible ? 1 : 0,
-				transition: "opacity 0.1s",
+				transition: "opacity 0.12s ease",
 				pointerEvents: visible ? "auto" : "none",
 			}}
 		>
@@ -34,11 +32,12 @@ function AddCellButton({ tabIndex, afterCellId, visible }: AddCellButtonProps) {
 				data-no-drag
 				style={{
 					fontSize: 11,
+					fontWeight: 500,
 					color: "var(--text-secondary)",
-					background: "transparent",
+					background: "var(--bg-tertiary)",
 					border: "1px dashed var(--border)",
-					borderRadius: 4,
-					padding: "1px 10px",
+					borderRadius: 8,
+					padding: "3px 10px",
 					cursor: "pointer",
 					width: "100%",
 				}}
@@ -48,9 +47,6 @@ function AddCellButton({ tabIndex, afterCellId, visible }: AddCellButtonProps) {
 		</div>
 	);
 }
-
-// ─── BetweenCells ─────────────────────────────────────────────────────────────
-// Thin hover-zone between two adjacent cells that reveals the add-cell button.
 
 interface BetweenCellsProps {
 	tabIndex: number;
@@ -64,8 +60,7 @@ function BetweenCells({ tabIndex, afterCellId }: BetweenCellsProps) {
 		<div
 			onMouseEnter={() => setHovered(true)}
 			onMouseLeave={() => setHovered(false)}
-			// Min height ensures the zone is always hit-testable even when collapsed.
-			style={{ minHeight: 4 }}
+			style={{ minHeight: 5 }}
 		>
 			<AddCellButton
 				tabIndex={tabIndex}
@@ -75,8 +70,6 @@ function BetweenCells({ tabIndex, afterCellId }: BetweenCellsProps) {
 		</div>
 	);
 }
-
-// ─── Notebook ─────────────────────────────────────────────────────────────────
 
 export function Notebook() {
 	const activeTab = useNotebookStore((s) => s.activeTab);
@@ -92,12 +85,12 @@ export function Notebook() {
 			style={{
 				flexGrow: 1,
 				overflowY: "auto",
-				padding: "8px 0",
+				padding: "10px 0 12px",
+				background: "var(--bg-primary)",
 			}}
 		>
 			{notebook.cells.map((cell, i) => (
 				<div key={cell.id}>
-					{/* Between-cell insert zone: shown on hover, skipped before first cell */}
 					{i > 0 && (
 						<BetweenCells
 							tabIndex={activeTab}
@@ -108,8 +101,7 @@ export function Notebook() {
 				</div>
 			))}
 
-			{/* After the last cell: always visible add button */}
-			<div style={{ padding: "4px 8px" }}>
+			<div style={{ padding: "6px 10px" }}>
 				<AddCellButton
 					tabIndex={activeTab}
 					afterCellId={lastCellId}

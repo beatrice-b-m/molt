@@ -11,13 +11,15 @@ const STATE_COLOR: Record<string, string> = {
 };
 
 const buttonStyle: React.CSSProperties = {
-	fontSize: 11,
-	padding: "2px 8px",
-	background: "var(--bg-tertiary)",
+	fontSize: 12,
+	padding: "4px 10px",
+	background: "var(--control-bg)",
 	color: "var(--text-primary)",
 	border: "1px solid var(--border)",
-	borderRadius: 4,
+	borderRadius: 8,
 	cursor: "pointer",
+	fontWeight: 500,
+	boxShadow: "var(--control-shadow)",
 };
 
 export function Toolbar() {
@@ -30,7 +32,6 @@ export function Toolbar() {
 	const kernelStopped = kernelState === "stopped" || kernelState === "error";
 
 	const handleRestart = async () => {
-		// Confirm if kernel is busy
 		if (kernelState === "busy") {
 			if (!window.confirm("A cell is currently running. Restart kernel?")) return;
 		}
@@ -38,7 +39,6 @@ export function Toolbar() {
 			updateKernelState(activeTab, "starting");
 			const state = await restartKernel(activeTab);
 			updateKernelState(activeTab, state);
-			// Clear all outputs on restart (spec requirement)
 			useNotebookStore.getState().notebooks[activeTab].cells.forEach((cell) => {
 				useNotebookStore.getState().setCellOutputs(activeTab, cell.id, []);
 				useNotebookStore.getState().setCellExecutionCount(activeTab, cell.id, 0);
@@ -80,25 +80,36 @@ export function Toolbar() {
 				display: "flex",
 				alignItems: "center",
 				gap: 8,
-				padding: "4px 12px",
+				padding: "7px 12px",
 				borderBottom: "1px solid var(--border)",
 				background: "var(--bg-secondary)",
 			}}
 		>
-			{/* Kernel status dot */}
-			<span
+			<div
 				style={{
-					width: 8,
-					height: 8,
-					borderRadius: "50%",
-					background: STATE_COLOR[kernelState] ?? "var(--text-secondary)",
-					display: "inline-block",
+					display: "inline-flex",
+					alignItems: "center",
+					gap: 6,
+					padding: "3px 8px",
+					borderRadius: 999,
+					background: "var(--bg-tertiary)",
+					border: "1px solid var(--border)",
 				}}
-				title={kernelState}
-			/>
-			<span style={{ fontSize: 11, color: "var(--text-secondary)" }}>
-				{kernelState}
-			</span>
+			>
+				<span
+					style={{
+						width: 7,
+						height: 7,
+						borderRadius: "50%",
+						background: STATE_COLOR[kernelState] ?? "var(--text-secondary)",
+						display: "inline-block",
+					}}
+					title={kernelState}
+				/>
+				<span style={{ fontSize: 11, color: "var(--text-secondary)", textTransform: "capitalize" }}>
+					{kernelState}
+				</span>
+			</div>
 			<button onClick={handleClear} style={buttonStyle}>
 				Clear
 			</button>
@@ -111,7 +122,7 @@ export function Toolbar() {
 			</button>
 			<button
 				onClick={handleStop}
-				style={{ ...buttonStyle, opacity: kernelStopped ? 0.5 : 1 }}
+				style={{ ...buttonStyle, opacity: kernelStopped ? 0.45 : 1 }}
 				disabled={kernelStopped}
 			>
 				■ Stop

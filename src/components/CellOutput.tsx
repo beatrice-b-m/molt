@@ -12,7 +12,7 @@ export function CellOutput({ outputs }: Props) {
 			style={{
 				borderTop: "1px solid var(--border)",
 				backgroundColor: "var(--output-bg)",
-				padding: "8px 12px",
+				padding: "10px 12px",
 				overflowX: "auto",
 			}}
 		>
@@ -28,7 +28,7 @@ function OutputItem({ output }: { output: CellOutputType }) {
 		margin: 0,
 		fontFamily: "var(--font-mono)",
 		fontSize: "var(--font-mono-size)",
-		lineHeight: "1.5",
+		lineHeight: "1.52",
 		whiteSpace: "pre-wrap",
 		wordBreak: "break-word",
 	};
@@ -46,7 +46,7 @@ function OutputItem({ output }: { output: CellOutputType }) {
 		const raw = output.text ?? "";
 		const lines = raw.split("\n");
 		return (
-			<pre style={{ ...basePreStyle, color: "var(--output-error-fg)" }}>
+			<pre style={{ ...basePreStyle, color: "var(--output-error-fg)", background: "var(--output-error-bg)", padding: "6px 8px", borderRadius: 8 }}>
 				{lines.map((line, i) =>
 					i === 0 ? (
 						<strong key={i}>{line}</strong>

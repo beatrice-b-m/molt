@@ -15,11 +15,11 @@ function WarningBanner({ message }: { message: string }) {
 	return (
 		<div
 			style={{
-				background: "var(--bg-tertiary)",
+				background: "var(--warning-bg)",
 				borderBottom: "1px solid var(--warning)",
 				color: "var(--warning)",
 				fontSize: 12,
-				padding: "5px 12px",
+				padding: "6px 12px",
 				fontFamily: "var(--font-system)",
 			}}
 		>

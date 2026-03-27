@@ -1,38 +1,95 @@
 :root {
-	color-scheme: dark;
-	--bg-primary: rgba(30, 30, 30, 0.85);
-	--bg-secondary: rgba(45, 45, 45, 0.8);
-	--bg-tertiary: rgba(61, 61, 61, 0.8);
-	--text-primary: #e0e0e0;
-	--text-secondary: #999;
-	--accent: #007aff;
-	--success: #34c759;
-	--warning: #ffcc00;
-	--error: #ff3b30;
-	--border: #404040;
-	--scrollbar-thumb: #404040;
-	--editor-bg: #1e1e1e;
-	--editor-fg: #d4d4d4;
-	--editor-cursor: #d4d4d4;
-	--editor-selection: #264f78;
-	--editor-line-highlight: #252525;
-	--editor-gutter-bg: #1e1e1e;
-	--editor-gutter-fg: #555;
-	--editor-gutter-border: #333;
-	--output-bg: #161616;
-	--output-fg: #e8e8e8;
-	--output-stderr: #ff9500;
-	--output-error-fg: #ff3b30;
-	--output-error-bg: #1c0d0d;
-	--font-mono: 'SF Mono', 'Menlo', 'Monaco', 'Courier New', monospace;
+	color-scheme: light;
+
+	--bg-primary: rgba(239, 241, 245, 0.78);
+	--bg-secondary: rgba(230, 233, 239, 0.86);
+	--bg-tertiary: rgba(220, 224, 232, 0.88);
+	--text-primary: #4c4f69;
+	--text-secondary: #6c6f85;
+	--accent: #1e66f5;
+	--success: #40a02b;
+	--warning: #df8e1d;
+	--warning-bg: #fef6e9;
+	--error: #d20f39;
+	--border: #ccd0da;
+	--scrollbar-thumb: #acb0be;
+
+	--surface-shadow: 0 8px 28px rgba(76, 79, 105, 0.12);
+	--control-shadow: 0 1px 2px rgba(76, 79, 105, 0.15);
+	--segment-control-bg: rgba(239, 241, 245, 0.9);
+	--segment-control-active-bg: rgba(255, 255, 255, 0.96);
+	--control-bg: rgba(255, 255, 255, 0.88);
+	--cell-bg: rgba(246, 248, 251, 0.82);
+	--cell-border: #ccd0da;
+
+	--editor-bg: #eff1f5;
+	--editor-fg: #4c4f69;
+	--editor-cursor: #dc8a78;
+	--editor-selection: #7c7f9340;
+	--editor-line-highlight: #e6e9ef;
+	--editor-gutter-bg: #eff1f5;
+	--editor-gutter-fg: #8c8fa1;
+	--editor-gutter-border: #ccd0da;
+
+	--syntax-keyword: #8839ef;
+	--syntax-string: #40a02b;
+	--syntax-number: #fe640b;
+	--syntax-comment: #8c8fa1;
+	--syntax-function: #1e66f5;
+	--syntax-variable: #4c4f69;
+	--syntax-type: #df8e1d;
+	--syntax-operator: #179299;
+	--syntax-punctuation: #5c5f77;
+	--syntax-property: #1e66f5;
+	--syntax-constant: #fe640b;
+	--syntax-builtin: #d20f39;
+	--syntax-decorator: #ea76cb;
+
+	--output-bg: #e6e9ef;
+	--output-fg: #4c4f69;
+	--output-stderr: #df8e1d;
+	--output-error-fg: #d20f39;
+	--output-error-bg: #f5e0dc;
+
+	--font-mono: "SF Mono", "Menlo", "Monaco", "Courier New", monospace;
 	--font-mono-size: 13px;
-	--font-system: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+	--font-system: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 	--font-system-size: 13px;
 }
 
-* { margin: 0; padding: 0; box-sizing: border-box; }
+:root.effects-on {
+	--bg-primary: rgba(239, 241, 245, 0.74);
+	--bg-secondary: rgba(230, 233, 239, 0.84);
+	--bg-tertiary: rgba(220, 224, 232, 0.86);
+	--segment-control-bg: rgba(239, 241, 245, 0.88);
+	--segment-control-active-bg: rgba(255, 255, 255, 0.96);
+	--control-bg: rgba(255, 255, 255, 0.84);
+	--cell-bg: rgba(246, 248, 251, 0.76);
+	--surface-shadow: 0 10px 30px rgba(76, 79, 105, 0.15);
+	--control-shadow: 0 1px 2px rgba(76, 79, 105, 0.16);
+}
 
-html, body, #root {
+:root.effects-off {
+	--bg-primary: #eff1f5;
+	--bg-secondary: #e6e9ef;
+	--bg-tertiary: #dce0e8;
+	--segment-control-bg: #e6e9ef;
+	--segment-control-active-bg: #ffffff;
+	--control-bg: #ffffff;
+	--cell-bg: #f8f9fb;
+	--surface-shadow: none;
+	--control-shadow: none;
+}
+
+* {
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
+}
+
+html,
+body,
+#root {
 	height: 100%;
 	background: transparent;
 	color: var(--text-primary);
@@ -41,21 +98,43 @@ html, body, #root {
 	overflow: hidden;
 }
 
+body {
+	text-rendering: optimizeLegibility;
+	-webkit-font-smoothing: antialiased;
+}
 
-/* Make buttons/interactive elements not draggable */
-button, input, [data-no-drag] {
+button,
+input,
+select,
+textarea,
+[data-no-drag] {
 	-webkit-app-region: no-drag;
 	app-region: no-drag;
 }
 
-/* Scrollbar styling */
-::-webkit-scrollbar {
-	width: 6px;
+button,
+input,
+select,
+textarea {
+	font: inherit;
+	color: inherit;
 }
+
+:focus-visible {
+	outline: 2px solid color-mix(in srgb, var(--accent) 45%, white);
+	outline-offset: 1px;
+}
+
+::-webkit-scrollbar {
+	width: 7px;
+	height: 7px;
+}
+
 ::-webkit-scrollbar-track {
 	background: transparent;
 }
+
 ::-webkit-scrollbar-thumb {
 	background: var(--scrollbar-thumb);
-	border-radius: 3px;
+	border-radius: 999px;
 }

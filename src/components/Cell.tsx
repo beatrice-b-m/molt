@@ -11,11 +11,6 @@ import { executeSingleCell } from "../hooks/execution";
 import { CellOutput as CellOutputView } from "./CellOutput";
 import { buildEditorExtensions } from "../theme/codemirror";
 
-
-
-// ---------------------------------------------------------------------------
-// Cell component
-// ---------------------------------------------------------------------------
 interface Props {
 	cell: CellType;
 	tabIndex: number;
@@ -35,24 +30,16 @@ export function Cell({ cell, tabIndex }: Props) {
 	const editorContainerRef = useRef<HTMLDivElement>(null);
 	const viewRef = useRef<EditorView | null>(null);
 
-	// These values are stable for the lifetime of a Cell instance.
 	const cellIdRef = useRef(cell.id);
 	const tabIndexRef = useRef(tabIndex);
-	// Keep a live ref to avoid stale closure in the updateListener.
 	const updateCellSourceRef = useRef(updateCellSource);
 	useEffect(() => {
 		updateCellSourceRef.current = updateCellSource;
 	});
 
-	// ------------------------------------------------------------------
-	// CodeMirror lifecycle: create on mount, destroy on unmount.
-	// ------------------------------------------------------------------
 	useEffect(() => {
 		if (!editorContainerRef.current) return;
 
-		// Read initial source fresh from the store rather than relying on the
-		// captured prop value, which may be slightly stale on strict-mode double
-		// invocation.
 		const initialSource =
 			useNotebookStore
 				.getState()
@@ -65,26 +52,24 @@ export function Cell({ cell, tabIndex }: Props) {
 				extensions: [
 					basicSetup,
 					python(),
-					// Execution keybindings at highest precedence so they
-					// override basicSetup's defaultKeymap, which binds
-					// Shift+Enter to insertNewlineAndIndent via its
-					// { key: "Enter", shift: ... } property.
-					Prec.highest(keymap.of([
-						{
-							key: "Shift-Enter",
-							run: () => {
-								executeSingleCell(tabIndexRef.current, cellIdRef.current);
-								return true;
+					Prec.highest(
+						keymap.of([
+							{
+								key: "Shift-Enter",
+								run: () => {
+									executeSingleCell(tabIndexRef.current, cellIdRef.current);
+									return true;
+								},
 							},
-						},
-						{
-							key: "Mod-Enter",
-							run: () => {
-								executeSingleCell(tabIndexRef.current, cellIdRef.current);
-								return true;
+							{
+								key: "Mod-Enter",
+								run: () => {
+									executeSingleCell(tabIndexRef.current, cellIdRef.current);
+									return true;
+								},
 							},
-						},
-					])),
+						]),
+					),
 					keymap.of([indentWithTab, ...defaultKeymap]),
 					buildEditorExtensions(),
 					EditorView.updateListener.of((update) => {
@@ -96,8 +81,6 @@ export function Cell({ cell, tabIndex }: Props) {
 							);
 						}
 					}),
-					// Auto-expanding: the editor grows with content instead of
-					// introducing an internal scrollbar.
 					EditorView.lineWrapping,
 				],
 			}),
@@ -111,12 +94,6 @@ export function Cell({ cell, tabIndex }: Props) {
 		};
 	}, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-	// ------------------------------------------------------------------
-	// Sync store → editor when source changes from outside this editor
-	// (e.g. programmatic clear, paste from another tab).
-	// Guard: if the change came from this editor, the doc already matches
-	// cell.source so the dispatch is skipped — no infinite loop.
-	// ------------------------------------------------------------------
 	useEffect(() => {
 		const view = viewRef.current;
 		if (!view) return;
@@ -128,11 +105,6 @@ export function Cell({ cell, tabIndex }: Props) {
 		}
 	}, [cell.source]);
 
-	// ------------------------------------------------------------------
-	// Focus this editor when the store requests it (Jupyter-style advance).
-	// Clear focusedCellId after consuming so a repeat run of the same
-	// predecessor can re-trigger the focus.
-	// ------------------------------------------------------------------
 	useEffect(() => {
 		if (focusedCellId === cell.id && viewRef.current) {
 			viewRef.current.focus();
@@ -140,12 +112,8 @@ export function Cell({ cell, tabIndex }: Props) {
 		}
 	}, [focusedCellId, cell.id, setFocusedCellId]);
 
-	// ------------------------------------------------------------------
-	// Run / interrupt handler
-	// ------------------------------------------------------------------
 	function handleRunClick() {
 		if (cell.state === "running") {
-			// Best-effort interrupt; ignore errors (kernel may already be idle).
 			interruptKernel(tabIndex).catch(() => {});
 		} else {
 			executeSingleCell(tabIndex, cell.id);
@@ -160,19 +128,23 @@ export function Cell({ cell, tabIndex }: Props) {
 			style={{
 				display: "flex",
 				flexDirection: "column",
-				borderBottom: "1px solid var(--border)",
 				position: "relative",
+				margin: "0 10px 10px",
+				border: "1px solid var(--cell-border)",
+				borderRadius: 12,
+				background: "var(--cell-bg)",
+				boxShadow: "var(--surface-shadow)",
+				overflow: "hidden",
 			}}
 			onMouseEnter={() => setHovered(true)}
 			onMouseLeave={() => setHovered(false)}
 		>
-			{/* Cell controls — top-right corner, visible on hover */}
 			{hovered && (
 				<div
 					style={{
 						position: "absolute",
-						top: 4,
-						right: 4,
+						top: 6,
+						right: 6,
 						display: "flex",
 						gap: 4,
 						zIndex: 10,
@@ -190,29 +162,26 @@ export function Cell({ cell, tabIndex }: Props) {
 				</div>
 			)}
 
-			{/* Main row: gutter + editor */}
 			<div style={{ display: "flex", alignItems: "stretch" }}>
-				{/* Gutter */}
 				<div
 					style={{
-						width: 48,
-						minWidth: 48,
+						width: 52,
+						minWidth: 52,
 						flexShrink: 0,
 						display: "flex",
 						flexDirection: "column",
 						alignItems: "center",
-						paddingTop: 6,
-						gap: 4,
-					borderRight: "1px solid var(--editor-gutter-border)",
-					backgroundColor: "var(--editor-gutter-bg)",
+						paddingTop: 8,
+						gap: 6,
+						borderRight: "1px solid var(--editor-gutter-border)",
+						backgroundColor: "var(--editor-gutter-bg)",
 					}}
 				>
-					{/* Execution count label: [N] when set, empty otherwise */}
 					<span
 						style={{
 							fontSize: 10,
-						color: "var(--editor-gutter-fg)",
-							fontFamily: "monospace",
+							color: "var(--editor-gutter-fg)",
+							fontFamily: "var(--font-mono)",
 							minHeight: 14,
 							userSelect: "none",
 						}}
@@ -220,47 +189,42 @@ export function Cell({ cell, tabIndex }: Props) {
 						{cell.executionCount !== null ? `[${cell.executionCount}]` : ""}
 					</span>
 
-					{/* Run / interrupt button */}
-						<button
-							title={runButtonTitle}
-							onClick={handleRunClick}
-							style={{
-								background: "none",
-								border: "none",
-								cursor: "pointer",
-								color: cell.state === "running"
-						? "var(--warning)"
-						: "var(--accent)",
-								fontSize: 12,
-								padding: "2px 4px",
-								lineHeight: 1,
-								userSelect: "none",
-							}}
-						>
+					<button
+						title={runButtonTitle}
+						onClick={handleRunClick}
+						style={{
+							background: "var(--control-bg)",
+							border: "1px solid var(--border)",
+							borderRadius: 999,
+							cursor: "pointer",
+							color: cell.state === "running" ? "var(--warning)" : "var(--accent)",
+							fontSize: 12,
+							width: 24,
+							height: 24,
+							lineHeight: 1,
+							boxShadow: "var(--control-shadow)",
+							userSelect: "none",
+						}}
+					>
 						{runButtonContent}
 					</button>
 				</div>
 
-				{/* CodeMirror editor container */}
 				<div
 					ref={editorContainerRef}
 					style={{
 						flex: 1,
-						minWidth: 0, // allow flex child to shrink below content width
-					backgroundColor: "var(--editor-bg)",
+						minWidth: 0,
+						backgroundColor: "var(--editor-bg)",
 					}}
 				/>
 			</div>
 
-			{/* Output area — only rendered when there are outputs */}
 			<CellOutputView outputs={cell.outputs} />
 		</div>
 	);
 }
 
-// ---------------------------------------------------------------------------
-// Minimal shared button for the hover controls — keeps the Cell JSX readable.
-// ---------------------------------------------------------------------------
 function ControlButton({
 	children,
 	title,
@@ -275,14 +239,15 @@ function ControlButton({
 			title={title}
 			onClick={onClick}
 			style={{
-				background: "var(--bg-tertiary)",
+				background: "var(--control-bg)",
 				border: "1px solid var(--border)",
-				borderRadius: 3,
+				borderRadius: 7,
 				color: "var(--text-secondary)",
 				cursor: "pointer",
 				fontSize: 12,
 				lineHeight: 1,
-				padding: "2px 5px",
+				padding: "3px 6px",
+				boxShadow: "var(--control-shadow)",
 				userSelect: "none",
 			}}
 		>
