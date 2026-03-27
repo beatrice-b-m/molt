@@ -1,58 +1,57 @@
 import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { emit } from "@tauri-apps/api/event";
-import { loadActiveTheme, loadThemeByName } from "../theme/load";
-import { applyThemeToCss } from "../theme/css";
-
-// ─── Types ────────────────────────────────────────────────────────────────────
 
 interface AppConfig {
 	python: { interpreter: string };
-	app: { auto_launch: boolean; tab_count: number; theme: string };
+	app: { auto_launch: boolean; tab_count: number; native_effects: boolean };
 }
 
 const DEFAULT_CONFIG: AppConfig = {
 	python: { interpreter: "python3" },
-	app: { auto_launch: false, tab_count: 4, theme: "github-dark" },
+	app: { auto_launch: false, tab_count: 4, native_effects: true },
 };
 
-// ─── SettingsForm ─────────────────────────────────────────────────────────────
+function setEffectsClass(enabled: boolean) {
+	const root = document.documentElement;
+	root.classList.toggle("effects-on", enabled);
+	root.classList.toggle("effects-off", !enabled);
+}
 
 export function SettingsForm() {
 	const [config, setConfig] = useState<AppConfig>(DEFAULT_CONFIG);
-	const [themes, setThemes] = useState<string[]>([]);
 	const [loadError, setLoadError] = useState<string | null>(null);
 	const [saveStatus, setSaveStatus] = useState<"idle" | "saved" | "error">("idle");
 	const [saveError, setSaveError] = useState<string | null>(null);
+	const [previewError, setPreviewError] = useState<string | null>(null);
 
-	// Load config and theme list on mount.
 	useEffect(() => {
-		const loadConfig = invoke<string>("get_config")
+		invoke<string>("get_config")
 			.then((raw) => {
 				const parsed = JSON.parse(raw) as AppConfig;
 				setConfig(parsed);
+			})
+			.catch((e) => {
+				setLoadError(String(e));
 			});
-
-		const loadThemes = invoke<string[]>("list_themes")
-			.then((names) => setThemes(names));
-
-		Promise.all([loadConfig, loadThemes]).catch((e) => {
-			setLoadError(String(e));
-		});
 	}, []);
 
-	// Apply live theme preview when the user picks a different theme.
-	function handleThemeChange(name: string) {
+	useEffect(() => {
+		setEffectsClass(config.app.native_effects);
+	}, [config.app.native_effects]);
+
+	function handleNativeEffectsChange(enabled: boolean) {
 		setConfig((prev) => ({
 			...prev,
-			app: { ...prev.app, theme: name },
+			app: { ...prev.app, native_effects: enabled },
 		}));
-		loadThemeByName(name)
-		.then((theme) => {
-			applyThemeToCss(theme);
-			return emit("theme-changed", { name });
-		})
-			.catch((e) => console.error("Theme preview failed", e));
+		setPreviewError(null);
+
+		invoke("set_native_effects", { enabled })
+			.then(() => emit("native-effects-changed", { enabled }))
+			.catch((e) => {
+				setPreviewError(String(e));
+			});
 	}
 
 	function handleSave() {
@@ -80,7 +79,6 @@ export function SettingsForm() {
 				boxSizing: "border-box",
 			}}
 		>
-			{/* Error banner — shown only when initial load failed */}
 			{loadError && (
 				<div
 					style={{
@@ -97,7 +95,6 @@ export function SettingsForm() {
 				</div>
 			)}
 
-			{/* ── Appearance ─────────────────────────────────────────────────── */}
 			<section style={{ marginBottom: 24 }}>
 				<div
 					style={{
@@ -113,42 +110,41 @@ export function SettingsForm() {
 				<div style={{ marginBottom: 12 }}>
 					<label
 						style={{
-							display: "block",
+							display: "flex",
+							alignItems: "center",
+							gap: 8,
+							cursor: "pointer",
 							color: "var(--text-secondary)",
 							fontSize: 13,
-							marginBottom: 6,
 						}}
 					>
-						Theme
+						<input
+							type="checkbox"
+							checked={config.app.native_effects}
+							onChange={(e) => handleNativeEffectsChange(e.target.checked)}
+							style={{ cursor: "pointer" }}
+						/>
+						Use native glass effects
 					</label>
-					<select
-						value={config.app.theme}
-						onChange={(e) => handleThemeChange(e.target.value)}
+					<div
 						style={{
-							background: "var(--bg-tertiary)",
-							color: "var(--text-primary)",
-							border: "1px solid var(--border)",
-							borderRadius: 4,
-							padding: "6px 10px",
-							fontSize: 13,
-							minWidth: 200,
-							cursor: "pointer",
+							color: "var(--text-secondary)",
+							fontSize: 11,
+							marginTop: 4,
+							marginLeft: 22,
 						}}
 					>
-						{themes.map((name) => (
-							<option key={name} value={name}>
-								{name}
-							</option>
-						))}
-						{/* Fallback: ensure current value is always present even if list hasn't loaded */}
-						{themes.length === 0 && (
-							<option value={config.app.theme}>{config.app.theme}</option>
-						)}
-					</select>
+						Applies frosted glass depth effects. Disable for a flatter, higher-clarity presentation.
+					</div>
 				</div>
+
+				{previewError && (
+					<div style={{ color: "var(--error)", fontSize: 12 }}>
+						Could not update window appearance live: {previewError}
+					</div>
+				)}
 			</section>
 
-			{/* ── Python ─────────────────────────────────────────────────────── */}
 			<section style={{ marginBottom: 24 }}>
 				<div
 					style={{
@@ -200,13 +196,11 @@ export function SettingsForm() {
 							marginTop: 4,
 						}}
 					>
-						Path to the Python interpreter. Absolute path or name on PATH.
-						Changes take effect on next kernel restart.
+						Path to the Python interpreter. Absolute path or name on PATH. Changes take effect on next kernel restart.
 					</div>
 				</div>
 			</section>
 
-			{/* ── Application ────────────────────────────────────────────────── */}
 			<section style={{ marginBottom: 24 }}>
 				<div
 					style={{
@@ -256,7 +250,6 @@ export function SettingsForm() {
 				</div>
 			</section>
 
-			{/* ── Save ───────────────────────────────────────────────────────── */}
 			<div style={{ display: "flex", alignItems: "center", gap: 12 }}>
 				<button
 					onClick={handleSave}
@@ -294,20 +287,6 @@ export function SettingsForm() {
 	);
 }
 
-// ─── SettingsApp ──────────────────────────────────────────────────────────────
-
 export function SettingsApp() {
-	const [ready, setReady] = useState(false);
-
-	useEffect(() => {
-		loadActiveTheme()
-			.then((theme) => {
-				applyThemeToCss(theme);
-				setReady(true);
-			})
-			.catch(() => setReady(true));
-	}, []);
-
-	if (!ready) return null;
 	return <SettingsForm />;
 }

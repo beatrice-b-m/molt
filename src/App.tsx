@@ -6,6 +6,8 @@ import { Notebook } from "./components/Notebook";
 import { useNotebookStore } from "./store/notebookStore";
 import { ensureKernel, getConfigWarning } from "./hooks/useKernel";
 import { usePersistence } from "./hooks/usePersistence";
+import { invoke } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
 
 // ─── WarningBanner ────────────────────────────────────────────────────────────
 
@@ -24,6 +26,16 @@ function WarningBanner({ message }: { message: string }) {
 			⚠ {message}
 		</div>
 	);
+}
+
+interface AppearanceConfig {
+	app: { native_effects: boolean };
+}
+
+function setEffectsClass(enabled: boolean) {
+	const root = document.documentElement;
+	root.classList.toggle("effects-on", enabled);
+	root.classList.toggle("effects-off", !enabled);
 }
 
 // ─── App ──────────────────────────────────────────────────────────────────────
@@ -46,6 +58,23 @@ export function App() {
 
 	// Track the timestamp of the most recent 'd' keydown for DD detection.
 	const lastDKeyTime = useRef<number>(0);
+
+	// ── appearance: sync effect mode from persisted config and settings changes ──
+	useEffect(() => {
+		invoke<string>("get_config")
+			.then((raw) => {
+				const parsed = JSON.parse(raw) as AppearanceConfig;
+				setEffectsClass(parsed.app.native_effects);
+			})
+			.catch((e) => console.error("get_config appearance sync failed", e));
+
+		const unlisten = listen<{ enabled: boolean }>("native-effects-changed", (event) => {
+			setEffectsClass(event.payload.enabled);
+		});
+
+		return () => { unlisten.then((f) => f()); };
+	}, []);
+
 
 	// ── boot: config warning + initial kernel ─────────────────────────────────
 	useEffect(() => {
