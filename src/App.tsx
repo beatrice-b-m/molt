@@ -1,15 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import "./styles.css";
-import { useThemeStore } from "./theme/store";
-import { applyThemeToCss } from "./theme/css";
-import { loadActiveTheme, loadThemeByName } from "./theme/load";
 import { TabBar } from "./components/TabBar";
 import { Toolbar } from "./components/Toolbar";
 import { Notebook } from "./components/Notebook";
 import { useNotebookStore } from "./store/notebookStore";
 import { ensureKernel, getConfigWarning } from "./hooks/useKernel";
 import { usePersistence } from "./hooks/usePersistence";
-import { listen } from "@tauri-apps/api/event";
 
 // ─── WarningBanner ────────────────────────────────────────────────────────────
 
@@ -46,41 +42,10 @@ export function App() {
 	const updateKernelState = useNotebookStore((s) => s.updateKernelState);
 
 	const [configWarning, setConfigWarning] = useState<string | null>(null);
-	const [themeLoaded, setThemeLoaded] = useState(false);
 	const notebooksLoaded = usePersistence();
-	const setTheme = useThemeStore((s) => s.setTheme);
 
 	// Track the timestamp of the most recent 'd' keydown for DD detection.
 	const lastDKeyTime = useRef<number>(0);
-
-	// ── theme: load and apply before first render ────────────────────────────
-	useEffect(() => {
-		loadActiveTheme()
-			.then((theme) => {
-				applyThemeToCss(theme);
-				setTheme(theme);
-				setThemeLoaded(true);
-			})
-			.catch((e) => {
-				console.error("Failed to load theme", e);
-				setThemeLoaded(true); // render anyway with CSS defaults
-			});
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, []);
-
-	// ── theme: react to changes from the settings window ─────────────────────
-	useEffect(() => {
-		const unlisten = listen<{ name: string }>("theme-changed", (event) => {
-			loadThemeByName(event.payload.name)
-				.then((theme) => {
-					applyThemeToCss(theme);
-					setTheme(theme);
-				})
-				.catch((e) => console.error("Theme sync failed", e));
-		});
-		return () => { unlisten.then((f) => f()); };
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, []);
 
 	// ── boot: config warning + initial kernel ─────────────────────────────────
 	useEffect(() => {
@@ -173,7 +138,7 @@ export function App() {
 		setFocusedCellId,
 	]);
 
-	if (!themeLoaded || !notebooksLoaded) return null;
+	if (!notebooksLoaded) return null;
 
 	return (
 		<div style={{ height: "100%", display: "flex", flexDirection: "column" }}>
