@@ -4,7 +4,6 @@ use tauri::{Manager, RunEvent};
 mod commands;
 mod config;
 mod kernel;
-mod theme;
 mod persistence;
 
 /// Opens (or focuses) the settings window.
@@ -29,6 +28,32 @@ fn open_settings_window(app_handle: &tauri::AppHandle) {
     }
 }
 
+fn set_main_window_native_effects(app_handle: &tauri::AppHandle, enabled: bool) -> Result<(), String> {
+    let window = app_handle
+        .get_webview_window("main")
+        .ok_or_else(|| "Main window not found".to_string())?;
+
+    #[cfg(target_os = "macos")]
+    {
+        use window_vibrancy::{apply_vibrancy, clear_vibrancy, NSVisualEffectMaterial};
+
+        if enabled {
+            apply_vibrancy(&window, NSVisualEffectMaterial::HudWindow, None, None)
+                .map_err(|e| format!("Failed to apply vibrancy: {}", e))?;
+        } else {
+            clear_vibrancy(&window).map_err(|e| format!("Failed to clear vibrancy: {}", e))?;
+        }
+    }
+
+    #[cfg(not(target_os = "macos"))]
+    {
+        let _ = enabled;
+    }
+
+    Ok(())
+}
+
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let app = tauri::Builder::default()
@@ -41,9 +66,7 @@ pub fn run() {
             commands::ensure_kernel,
             commands::get_kernel_status,
             commands::get_config_warning,
-            commands::list_themes,
-            commands::load_theme,
-            commands::load_active_theme,
+            commands::set_native_effects,
             commands::get_config,
             commands::save_config,
 			commands::load_notebooks,
@@ -56,9 +79,6 @@ pub fn run() {
                 log::warn!("Interpreter validation failed: {}", msg);
             }
             app.manage(config::ConfigState::new(warning));
-
-            // Copy bundled default themes to user config dir if needed
-            theme::ensure_default_themes(app.handle());
 
             // Initialize kernel manager
             app.manage(kernel::KernelManager::new(
@@ -103,14 +123,9 @@ pub fn run() {
                 }
             });
 
-            // Apply macOS vibrancy to the main window (frosted glass appearance)
-            if let Some(window) = app.get_webview_window("main") {
-                #[cfg(target_os = "macos")]
-                {
-                    use window_vibrancy::{apply_vibrancy, NSVisualEffectMaterial};
-                    let _ =
-                        apply_vibrancy(&window, NSVisualEffectMaterial::HudWindow, None, None);
-                }
+            let native_effects_enabled = config::load_config().app.native_effects;
+            if let Err(e) = set_main_window_native_effects(app.handle(), native_effects_enabled) {
+                log::warn!("Failed to apply native effects setting: {}", e);
             }
 
             log::info!("Molt initialized");

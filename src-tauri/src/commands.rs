@@ -1,7 +1,6 @@
 use crate::config::ConfigState;
 use crate::kernel::{KernelManager, KernelResponse};
-use crate::theme;
-use tauri::State;
+use tauri::{AppHandle, State};
 
 #[tauri::command]
 pub async fn ensure_kernel(
@@ -67,21 +66,9 @@ pub async fn get_config_warning(
     Ok(warning.clone())
 }
 
-
 #[tauri::command]
-pub fn list_themes() -> Vec<String> {
-    theme::list_theme_names()
-}
-
-#[tauri::command]
-pub fn load_theme(name: String) -> Result<String, String> {
-    theme::load_theme_by_name(&name)
-}
-
-#[tauri::command]
-pub fn load_active_theme() -> Result<String, String> {
-    let config = crate::config::load_config();
-    theme::load_theme_by_name(&config.app.theme)
+pub fn set_native_effects(enabled: bool, app_handle: AppHandle) -> Result<(), String> {
+    crate::set_main_window_native_effects(&app_handle, enabled)
 }
 
 #[tauri::command]
