@@ -24,9 +24,8 @@ pub struct AppSection {
     pub auto_launch: bool,
     #[serde(default = "default_tab_count")]
     pub tab_count: u8,
-    #[serde(default = "default_theme")]
-    pub theme: String,
-}
+    #[serde(default = "default_native_effects")]
+    pub native_effects: bool,
 
 fn default_python() -> PythonConfig {
     PythonConfig {
@@ -42,8 +41,8 @@ fn default_tab_count() -> u8 {
     4
 }
 
-fn default_theme() -> String {
-    "github-dark".to_string()
+fn default_native_effects() -> bool {
+    true
 }
 
 impl Default for AppConfig {
@@ -60,7 +59,7 @@ impl Default for AppSection {
         Self {
             auto_launch: false,
             tab_count: default_tab_count(),
-            theme: default_theme(),
+            native_effects: default_native_effects(),
         }
     }
 }
@@ -94,8 +93,8 @@ pub fn load_config() -> AppConfig {
         }
         let default = AppConfig::default();
         let content = format!(
-            "[python]\n# Path to the Python interpreter to use for all kernels.\n# Supports absolute paths or names resolvable on PATH.\n# Default: \"python3\"\ninterpreter = \"{}\"\n\n[app]\n# Launch Molt automatically at macOS login.\nauto_launch = {}\n\n# Number of tabs. Currently fixed at 4; reserved for future use.\ntab_count = {}\n\n# Theme to load at startup (filename without .json in ~/.config/molt/themes/).\ntheme = \"{}\"\n",
-            default.python.interpreter, default.app.auto_launch, default.app.tab_count, default.app.theme,
+            "[python]\n# Path to the Python interpreter to use for all kernels.\n# Supports absolute paths or names resolvable on PATH.\n# Default: \"python3\"\ninterpreter = \"{}\"\n\n[app]\n# Launch Molt automatically at macOS login.\nauto_launch = {}\n\n# Number of tabs. Currently fixed at 4; reserved for future use.\ntab_count = {}\n\n# Enable native macOS glass/vibrancy window effects.\nnative_effects = {}\n",
+            default.python.interpreter, default.app.auto_launch, default.app.tab_count, default.app.native_effects,
         );
         let _ = std::fs::write(&path, content);
         return default;
@@ -114,8 +113,8 @@ pub fn save_config(config: &AppConfig) -> Result<(), String> {
         std::fs::create_dir_all(parent).map_err(|e| format!("Failed to create config directory: {}", e))?;
     }
     let content = format!(
-        "[python]\n# Path to the Python interpreter to use for all kernels.\n# Supports absolute paths or names resolvable on PATH.\n# Default: \"python3\"\ninterpreter = \"{}\"\n\n[app]\n# Launch Molt automatically at macOS login.\nauto_launch = {}\n\n# Number of tabs. Currently fixed at 4; reserved for future use.\ntab_count = {}\n\n# Theme to load at startup (filename without .json in ~/.config/molt/themes/).\ntheme = \"{}\"\n",
-        config.python.interpreter, config.app.auto_launch, config.app.tab_count, config.app.theme,
+        "[python]\n# Path to the Python interpreter to use for all kernels.\n# Supports absolute paths or names resolvable on PATH.\n# Default: \"python3\"\ninterpreter = \"{}\"\n\n[app]\n# Launch Molt automatically at macOS login.\nauto_launch = {}\n\n# Number of tabs. Currently fixed at 4; reserved for future use.\ntab_count = {}\n\n# Enable native macOS glass/vibrancy window effects.\nnative_effects = {}\n",
+        config.python.interpreter, config.app.auto_launch, config.app.tab_count, config.app.native_effects,
     );
     std::fs::write(&path, content).map_err(|e| format!("Failed to write config: {}", e))
 }
@@ -169,7 +168,7 @@ mod tests {
         assert_eq!(cfg.python.interpreter, "python3");
         assert_eq!(cfg.app.auto_launch, false);
         assert_eq!(cfg.app.tab_count, 4);
-        assert_eq!(cfg.app.theme, "github-dark");
+        assert_eq!(cfg.app.native_effects, true);
     }
 
     #[test]
@@ -186,6 +185,7 @@ tab_count = 2
         assert_eq!(cfg.python.interpreter, "/usr/local/bin/python3.12");
         assert_eq!(cfg.app.auto_launch, true);
         assert_eq!(cfg.app.tab_count, 2);
+        assert_eq!(cfg.app.native_effects, true);
     }
 
     #[test]
@@ -194,7 +194,7 @@ tab_count = 2
         assert_eq!(cfg.python.interpreter, "python3");
         assert_eq!(cfg.app.auto_launch, false);
         assert_eq!(cfg.app.tab_count, 4);
-        assert_eq!(cfg.app.theme, "github-dark");
+        assert_eq!(cfg.app.native_effects, true);
     }
 
     #[test]
@@ -208,16 +208,26 @@ interpreter = "pypy3"
         // app section absent — must fall back to defaults
         assert_eq!(cfg.app.auto_launch, false);
         assert_eq!(cfg.app.tab_count, 4);
+        assert_eq!(cfg.app.native_effects, true);
+    }
+    #[test]
+    fn toml_parses_native_effects_field() {
+        let toml = r#"
+[app]
+native_effects = false
+"#;
+        let cfg: AppConfig = toml::from_str(toml).expect("parse failed");
+        assert_eq!(cfg.app.native_effects, false);
     }
 
     #[test]
-    fn toml_parses_theme_field() {
+    fn toml_legacy_theme_field_is_ignored() {
         let toml = r#"
 [app]
 theme = "github-light"
 "#;
         let cfg: AppConfig = toml::from_str(toml).expect("parse failed");
-        assert_eq!(cfg.app.theme, "github-light");
+        assert_eq!(cfg.app.native_effects, true);
     }
 
 }
