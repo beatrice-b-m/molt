@@ -26,6 +26,8 @@ pub struct AppSection {
     pub tab_count: u8,
     #[serde(default = "default_native_effects")]
     pub native_effects: bool,
+}
+
 
 fn default_python() -> PythonConfig {
     PythonConfig {

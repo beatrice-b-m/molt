@@ -92,7 +92,7 @@ export function Cell({ cell, tabIndex }: Props) {
 			view.destroy();
 			viewRef.current = null;
 		};
-	}, []); // eslint-disable-line react-hooks/exhaustive-deps
+	}, []);
 
 	useEffect(() => {
 		const view = viewRef.current;
