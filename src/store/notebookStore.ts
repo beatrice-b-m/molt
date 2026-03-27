@@ -97,7 +97,7 @@ export interface NotebookStore {
 	incrementExecutionCounter: (tabIndex: number) => number;
 	/** Replace cell contents from persisted data (source only, no outputs). */
 	initializeFromPersisted: (tabs: Array<{ tabIndex: number; cells: Array<{ id: string; type: "code" | "markdown"; source: string }> }>) => void;
-	/** Reset a tab to a single empty cell, clearing all content. */
+	/** Reset a tab to its initial base state. */
 	clearTab: (tabIndex: number) => void;
 }
 
@@ -284,10 +284,10 @@ export const useNotebookStore = create<NotebookStore>((set, get) => ({
 	clearTab: (tabIndex) => {
 		set((s) => ({
 			notebooks: s.notebooks.map((nb) =>
-				nb.tabIndex !== tabIndex
-					? nb
-					: { ...nb, cells: [makeCell()], executionCounter: 0 },
+				nb.tabIndex !== tabIndex ? nb : makeNotebook(tabIndex),
 			),
+			focusedCellId: null,
+			isCommandMode: false,
 		}));
 	},
 }));

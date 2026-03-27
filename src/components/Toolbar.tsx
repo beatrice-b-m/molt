@@ -70,10 +70,16 @@ export function Toolbar() {
 		}
 	};
 
-	const handleClear = () => {
-		if (window.confirm("Clear all cells in this tab?")) {
-			clearTab(activeTab);
+	const handleClear = async () => {
+		if (!window.confirm("Clear all cells in this tab?")) return;
+		if (!kernelStopped) {
+			try {
+				await stopKernel(activeTab);
+			} catch (e) {
+				console.error("clear stop failed", e);
+			}
 		}
+		clearTab(activeTab);
 	};
 
 	return (

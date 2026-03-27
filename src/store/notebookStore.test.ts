@@ -393,6 +393,52 @@ describe("updateKernelState", () => {
 	});
 });
 
+// ─── clearTab ─────────────────────────────────────────────────────────────────
+
+describe("clearTab", () => {
+	it("resets the target tab to its base state", () => {
+		const store = useNotebookStore.getState();
+		const tab = 0;
+		const id = firstCellId(tab);
+
+		store.updateCellSource(tab, id, "x = 1");
+		store.setCellOutputs(tab, id, [{ outputType: "stream", text: "x" }]);
+		store.setCellExecutionCount(tab, id, 7);
+		store.setCellState(tab, id, "success");
+		store.incrementExecutionCounter(tab);
+		store.updateKernelState(tab, "busy");
+		store.addCell(tab, id);
+		store.setFocusedCellId(id);
+		store.setCommandMode(true);
+
+		store.clearTab(tab);
+
+		const cleared = nb(tab);
+		expect(cleared.cells).toHaveLength(1);
+		expect(cleared.cells[0].source).toBe("");
+		expect(cleared.cells[0].outputs).toEqual([]);
+		expect(cleared.cells[0].executionCount).toBeNull();
+		expect(cleared.cells[0].state).toBe("idle");
+		expect(cleared.executionCounter).toBe(0);
+		expect(cleared.kernelState).toBe("stopped");
+		expect(useNotebookStore.getState().focusedCellId).toBeNull();
+		expect(useNotebookStore.getState().isCommandMode).toBe(false);
+	});
+
+	it("only resets the requested tab", () => {
+		const store = useNotebookStore.getState();
+		const tab1Id = firstCellId(1);
+		store.updateCellSource(1, tab1Id, "keep = True");
+		store.updateKernelState(1, "idle");
+
+		store.clearTab(0);
+
+		expect(nb(1).cells[0].source).toBe("keep = True");
+		expect(nb(1).kernelState).toBe("idle");
+	});
+});
+
+
 // ─── setCommandMode ───────────────────────────────────────────────────────────
 
 describe("setCommandMode", () => {
