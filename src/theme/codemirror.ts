@@ -19,7 +19,11 @@ export function buildEditorExtensions(): Extension[] {
 			".cm-cursor, .cm-dropCursor": {
 				borderLeftColor: "var(--editor-cursor)",
 			},
-			"&.cm-focused .cm-selectionBackground, .cm-selectionBackground": {
+			// Use the full structural path so specificity matches the base theme's
+			// "&light.cm-focused > .cm-scroller > .cm-selectionLayer" rule (0,5,0).
+			// A shorter descendant selector (0,3,0) loses to it and leaves the
+			// default near-invisible gray on a white background.
+			"&.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground, & .cm-selectionBackground": {
 				backgroundColor: "var(--editor-selection)",
 			},
 			".cm-activeLine": {
