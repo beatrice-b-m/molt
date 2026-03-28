@@ -1,56 +1,69 @@
 :root {
 	color-scheme: light;
 
-	--bg-primary: rgba(239, 241, 245, 0.78);
-	--bg-secondary: rgba(230, 233, 239, 0.86);
-	--bg-tertiary: rgba(220, 224, 232, 0.88);
-	--text-primary: #4c4f69;
-	--text-secondary: #6c6f85;
-	--accent: #1e66f5;
-	--success: #40a02b;
-	--warning: #df8e1d;
-	--warning-bg: #fef6e9;
-	--error: #d20f39;
-	--border: #ccd0da;
-	--scrollbar-thumb: #acb0be;
+	/* --- Surfaces --- */
+	/* Semi-transparent base; solid overrides are in effects-off below. */
+	--bg-primary: rgba(246, 248, 250, 0.78);
+	--bg-secondary: rgba(240, 243, 247, 0.86);
+	--bg-tertiary: rgba(232, 237, 243, 0.88);
 
-	--surface-shadow: 0 8px 28px rgba(76, 79, 105, 0.12);
-	--control-shadow: 0 1px 2px rgba(76, 79, 105, 0.15);
-	--segment-control-bg: rgba(239, 241, 245, 0.9);
+	/* --- Text --- */
+	--text-primary: #333333;    /* Primer Light default foreground */
+	--text-secondary: #6a737d;  /* GitHub muted text */
+
+	/* --- Accent / status --- */
+	--accent: #3d82c6;          /* Primer Light primary accent */
+	--success: #448c27;         /* CSS property-value green from Primer palette */
+	--warning: #9a6700;         /* GitHub attention.fg — readable amber */
+	--warning-bg: #fff8c5;      /* GitHub attention.subtle background */
+	--error: #d21d00;           /* Primer Light editorError */
+
+	/* --- Chrome --- */
+	--border: #d0d7de;
+	--scrollbar-thumb: #c8d1da;
+
+	/* --- Shadows --- */
+	--surface-shadow: 0 8px 28px rgba(61, 130, 198, 0.10);
+	--control-shadow: 0 1px 2px rgba(51, 51, 51, 0.10);
+	--segment-control-bg: rgba(240, 243, 247, 0.9);
 	--segment-control-active-bg: rgba(255, 255, 255, 0.96);
-	--control-bg: rgba(255, 255, 255, 0.88);
-	--cell-bg: rgba(246, 248, 251, 0.82);
-	--cell-border: #ccd0da;
+	--control-bg: rgba(255, 255, 255, 0.90);
+	--cell-bg: rgba(255, 255, 255, 0.92);
+	--cell-border: #d0d7de;
 
-	--editor-bg: #eff1f5;
-	--editor-fg: #4c4f69;
-	--editor-cursor: #dc8a78;
-	--editor-selection: #7c7f9340;
-	--editor-line-highlight: #e6e9ef;
-	--editor-gutter-bg: #eff1f5;
-	--editor-gutter-fg: #8c8fa1;
-	--editor-gutter-border: #ccd0da;
+	/* --- Editor chrome --- */
+	--editor-bg: #ffffff;                  /* Primer Light editor.background */
+	--editor-fg: #333333;                  /* Primer Light default foreground */
+	--editor-cursor: #3d82c6;              /* Primary accent */
+	--editor-selection: #acd5ff;           /* editor.selectionBackground */
+	--editor-line-highlight: #f0f5fa;      /* editor.lineHighlightBackground */
+	--editor-gutter-bg: #fafbfc;
+	--editor-gutter-fg: #969896;           /* Comment color — muted line numbers */
+	--editor-gutter-border: #e1e4e8;
 
-	--syntax-keyword: #8839ef;
-	--syntax-string: #40a02b;
-	--syntax-number: #fe640b;
-	--syntax-comment: #8c8fa1;
-	--syntax-function: #1e66f5;
-	--syntax-variable: #4c4f69;
-	--syntax-type: #df8e1d;
-	--syntax-operator: #179299;
-	--syntax-punctuation: #5c5f77;
-	--syntax-property: #1e66f5;
-	--syntax-constant: #fe640b;
-	--syntax-builtin: #d20f39;
-	--syntax-decorator: #ea76cb;
+	/* --- Syntax tokens (Primer Light tokenColors) --- */
+	--syntax-keyword: #a71d5d;    /* keyword, storage */
+	--syntax-string: #4180c6;     /* string */
+	--syntax-number: #0086b3;     /* constant.numeric */
+	--syntax-comment: #969896;    /* comment */
+	--syntax-function: #795da3;   /* entity.name.function, support.function */
+	--syntax-variable: #333333;   /* variable (default text) */
+	--syntax-type: #0086b3;       /* support.class, entity.name.class */
+	--syntax-operator: #333333;   /* operator — default text in Primer Light */
+	--syntax-punctuation: #333333; /* punctuation — default text */
+	--syntax-property: #795da3;   /* propertyName → functions/constants role */
+	--syntax-constant: #795da3;   /* constant, bool, null */
+	--syntax-builtin: #a71d5d;    /* standard builtins → keyword/storage role */
+	--syntax-decorator: #795da3;  /* meta/decorators → function role */
 
-	--output-bg: #e6e9ef;
-	--output-fg: #4c4f69;
-	--output-stderr: #df8e1d;
-	--output-error-fg: #d20f39;
-	--output-error-bg: #f5e0dc;
+	/* --- Cell output --- */
+	--output-bg: #f6f8fa;
+	--output-fg: #333333;
+	--output-stderr: #9a6700;     /* amber — readable on light bg */
+	--output-error-fg: #d21d00;
+	--output-error-bg: #ffebe9;
 
+	/* --- Typography --- */
 	--font-mono: "SF Mono", "Menlo", "Monaco", "Courier New", monospace;
 	--font-mono-size: 13px;
 	--font-system: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -58,25 +71,25 @@
 }
 
 :root.effects-on {
-	--bg-primary: rgba(239, 241, 245, 0.74);
-	--bg-secondary: rgba(230, 233, 239, 0.84);
-	--bg-tertiary: rgba(220, 224, 232, 0.86);
-	--segment-control-bg: rgba(239, 241, 245, 0.88);
+	--bg-primary: rgba(246, 248, 250, 0.74);
+	--bg-secondary: rgba(240, 243, 247, 0.84);
+	--bg-tertiary: rgba(232, 237, 243, 0.86);
+	--segment-control-bg: rgba(240, 243, 247, 0.88);
 	--segment-control-active-bg: rgba(255, 255, 255, 0.96);
 	--control-bg: rgba(255, 255, 255, 0.84);
-	--cell-bg: rgba(246, 248, 251, 0.76);
-	--surface-shadow: 0 10px 30px rgba(76, 79, 105, 0.15);
-	--control-shadow: 0 1px 2px rgba(76, 79, 105, 0.16);
+	--cell-bg: rgba(255, 255, 255, 0.80);
+	--surface-shadow: 0 10px 30px rgba(61, 130, 198, 0.13);
+	--control-shadow: 0 1px 2px rgba(51, 51, 51, 0.12);
 }
 
 :root.effects-off {
-	--bg-primary: #eff1f5;
-	--bg-secondary: #e6e9ef;
-	--bg-tertiary: #dce0e8;
-	--segment-control-bg: #e6e9ef;
+	--bg-primary: #f6f8fa;
+	--bg-secondary: #f0f3f7;
+	--bg-tertiary: #e8ecf2;
+	--segment-control-bg: #f0f3f7;
 	--segment-control-active-bg: #ffffff;
 	--control-bg: #ffffff;
-	--cell-bg: #f8f9fb;
+	--cell-bg: #ffffff;
 	--surface-shadow: none;
 	--control-shadow: none;
 }

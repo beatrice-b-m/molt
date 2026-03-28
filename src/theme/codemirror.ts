@@ -45,7 +45,7 @@ export function buildEditorExtensions(): Extension[] {
 		{ tag: tags.keyword, color: "var(--syntax-keyword)" },
 		{ tag: tags.string, color: "var(--syntax-string)" },
 		{ tag: tags.number, color: "var(--syntax-number)" },
-		{ tag: [tags.lineComment, tags.blockComment], color: "var(--syntax-comment)", fontStyle: "italic" },
+		{ tag: [tags.lineComment, tags.blockComment], color: "var(--syntax-comment)" },
 		{ tag: [tags.function(tags.variableName), tags.function(tags.definition(tags.variableName))], color: "var(--syntax-function)" },
 		{ tag: tags.variableName, color: "var(--syntax-variable)" },
 		{ tag: [tags.typeName, tags.className], color: "var(--syntax-type)" },
