@@ -36,7 +36,7 @@
 	--editor-fg: #333333;                  /* Primer Light default foreground */
 	--editor-cursor: #3d82c6;              /* Primary accent */
 	--editor-selection: #acd5ff;           /* editor.selectionBackground */
-	--editor-line-highlight: #f0f5fa;      /* editor.lineHighlightBackground */
+	--editor-line-highlight: rgba(61, 130, 198, 0.06); /* semi-transparent: selection layer (z-index:-1) must show through */
 	--editor-gutter-bg: #fafbfc;
 	--editor-gutter-fg: #969896;           /* Comment color — muted line numbers */
 	--editor-gutter-border: #e1e4e8;
