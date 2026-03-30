@@ -109,6 +109,9 @@ export const Toolbar = memo(function Toolbar() {
 					borderRadius: 999,
 					background: "var(--bg-tertiary)",
 					border: "1px solid var(--border)",
+					// Fixed width prevents layout shift when kernel state text changes
+					// (e.g. "starting" → "idle"). The longest label is "starting" (~8ch).
+					minWidth: 78,
 				}}
 			>
 				<span

@@ -82,6 +82,7 @@ export function App() {
 			.then((w) => setConfigWarning(w))
 			.catch((e) => console.error("getConfigWarning failed", e));
 
+		updateKernelState(activeTab, "starting");
 		ensureKernel(activeTab)
 			.then((state) => updateKernelState(activeTab, state))
 			.catch((e) => console.error("ensureKernel failed", e));
@@ -91,9 +92,11 @@ export function App() {
 
 	// ── lazy kernel start on tab switch ──────────────────────────────────────
 	useEffect(() => {
-		// Skip if already started (not "stopped" means it was initialized).
-		if (notebooks[activeTab].kernelState !== "stopped") return;
+		// Read live state — the boot effect may have already set this tab to "starting".
+		const current = useNotebookStore.getState().notebooks[activeTab].kernelState;
+		if (current !== "stopped") return;
 
+		updateKernelState(activeTab, "starting");
 		ensureKernel(activeTab)
 			.then((state) => updateKernelState(activeTab, state))
 			.catch((e) =>
