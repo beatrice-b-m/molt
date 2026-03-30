@@ -130,37 +130,40 @@ export function Cell({ cell, tabIndex }: Props) {
 				flexDirection: "column",
 				position: "relative",
 				margin: "0 10px 10px",
-				border: "1px solid var(--cell-border)",
+				border: hovered ? "1px solid rgba(61, 130, 198, 0.35)" : "1px solid var(--cell-border)",
 				borderRadius: 12,
 				background: "var(--cell-bg)",
 				boxShadow: "var(--surface-shadow)",
 				overflow: "hidden",
+				transition: "border-color var(--motion-base) var(--ease-standard)",
 			}}
 			onMouseEnter={() => setHovered(true)}
 			onMouseLeave={() => setHovered(false)}
 		>
-			{hovered && (
-				<div
-					style={{
-						position: "absolute",
-						top: 6,
-						right: 6,
-						display: "flex",
-						gap: 4,
-						zIndex: 10,
-					}}
-				>
-					<ControlButton title="Move up" onClick={() => moveCellUp(tabIndex, cell.id)}>
-						↑
-					</ControlButton>
-					<ControlButton title="Move down" onClick={() => moveCellDown(tabIndex, cell.id)}>
-						↓
-					</ControlButton>
-					<ControlButton title="Delete cell" onClick={() => deleteCell(tabIndex, cell.id)}>
-						×
-					</ControlButton>
-				</div>
-			)}
+			<div
+				style={{
+					position: "absolute",
+					top: 6,
+					right: 6,
+					display: "flex",
+					gap: 4,
+					zIndex: 10,
+					opacity: hovered ? 1 : 0,
+					transform: hovered ? "translateY(0)" : "translateY(-3px)",
+					pointerEvents: hovered ? "auto" : "none",
+					transition: "opacity var(--motion-fast) var(--ease-standard), transform var(--motion-fast) var(--ease-standard)",
+				}}
+			>
+				<ControlButton title="Move up" onClick={() => moveCellUp(tabIndex, cell.id)}>
+					↑
+				</ControlButton>
+				<ControlButton title="Move down" onClick={() => moveCellDown(tabIndex, cell.id)}>
+					↓
+				</ControlButton>
+				<ControlButton title="Delete cell" onClick={() => deleteCell(tabIndex, cell.id)}>
+					×
+				</ControlButton>
+			</div>
 
 			<div style={{ display: "flex", alignItems: "stretch" }}>
 				<div
@@ -204,6 +207,7 @@ export function Cell({ cell, tabIndex }: Props) {
 							lineHeight: 1,
 							boxShadow: "var(--control-shadow)",
 							userSelect: "none",
+							transition: "color var(--motion-fast) var(--ease-standard), background var(--motion-fast) var(--ease-standard), border-color var(--motion-fast) var(--ease-standard)",
 						}}
 					>
 						{runButtonContent}

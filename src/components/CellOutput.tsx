@@ -8,7 +8,7 @@ export function CellOutput({ outputs }: Props) {
 	if (outputs.length === 0) return null;
 
 	return (
-		<div
+		<div className="ui-fade-enter"
 			style={{
 				borderTop: "1px solid var(--border)",
 				backgroundColor: "var(--output-bg)",

@@ -139,7 +139,7 @@ export function SettingsForm() {
 				</div>
 
 				{previewError && (
-					<div style={{ color: "var(--error)", fontSize: 12 }}>
+					<div className="ui-fade-enter" style={{ color: "var(--error)", fontSize: 12 }}>
 						Could not update window appearance live: {previewError}
 					</div>
 				)}
@@ -168,7 +168,7 @@ export function SettingsForm() {
 					>
 						Interpreter
 					</label>
-					<input
+					<input className="settings-input"
 						type="text"
 						value={config.python.interpreter}
 						placeholder="python3"
@@ -186,7 +186,6 @@ export function SettingsForm() {
 							padding: "6px 10px",
 							fontSize: 13,
 							minWidth: 300,
-							outline: "none",
 						}}
 					/>
 					<div
@@ -262,18 +261,19 @@ export function SettingsForm() {
 						fontSize: 13,
 						cursor: "pointer",
 						fontFamily: "var(--font-system)",
+						transition: "background var(--motion-base) var(--ease-standard), opacity var(--motion-fast) var(--ease-standard)",
 					}}
 				>
 					Save
 				</button>
 
 				{saveStatus === "saved" && (
-					<span style={{ color: "var(--success)", fontSize: 13 }}>Saved</span>
+					<span className="ui-fade-enter" style={{ color: "var(--success)", fontSize: 13 }}>Saved</span>
 				)}
 			</div>
 
 			{saveStatus === "error" && saveError && (
-				<div
+				<div className="ui-fade-enter"
 					style={{
 						color: "var(--error)",
 						fontSize: 13,

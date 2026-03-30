@@ -20,6 +20,7 @@ const buttonStyle: React.CSSProperties = {
 	cursor: "pointer",
 	fontWeight: 500,
 	boxShadow: "var(--control-shadow)",
+	transition: "color var(--motion-fast) var(--ease-standard), background var(--motion-fast) var(--ease-standard), border-color var(--motion-fast) var(--ease-standard), box-shadow var(--motion-fast) var(--ease-standard), opacity var(--motion-fast) var(--ease-standard)",
 };
 
 export function Toolbar() {
@@ -103,6 +104,7 @@ export function Toolbar() {
 						borderRadius: "50%",
 						background: STATE_COLOR[kernelState] ?? "var(--text-secondary)",
 						display: "inline-block",
+						transition: "background-color var(--motion-base) var(--ease-standard)",
 					}}
 					title={kernelState}
 				/>

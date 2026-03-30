@@ -41,6 +41,7 @@ export function TabBar() {
 								fontSize: 12,
 								fontWeight: isActive ? 600 : 500,
 								boxShadow: isActive ? "var(--control-shadow)" : "none",
+								transition: "background var(--motion-base) var(--ease-standard), color var(--motion-base) var(--ease-standard), box-shadow var(--motion-base) var(--ease-standard)",
 							}}
 						>
 							Tab {i + 1}

@@ -23,7 +23,8 @@ function AddCellButton({ tabIndex, afterCellId, visible }: AddCellButtonProps) {
 			style={{
 				padding: "2px 10px",
 				opacity: visible ? 1 : 0,
-				transition: "opacity 0.12s ease",
+				transform: visible ? "translateY(0)" : "translateY(2px)",
+				transition: "opacity var(--motion-fast) var(--ease-standard), transform var(--motion-fast) var(--ease-standard)",
 				pointerEvents: visible ? "auto" : "none",
 			}}
 		>
