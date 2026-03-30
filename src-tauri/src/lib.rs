@@ -87,6 +87,13 @@ pub fn run() {
             ));
 
             // Build the native menu bar
+            // The first submenu on macOS is always the app-name menu; it must
+            // include Quit to give Cmd+Q a registered menu target. Tauri's
+            // set_menu() replaces the default menu wholesale, so we rebuild it.
+            let molt_menu = SubmenuBuilder::new(app, "Molt")
+                .quit()
+                .build()?;
+
             let file_menu = SubmenuBuilder::new(app, "File")
                 .text("settings", "Settings...")
                 .separator()
@@ -108,6 +115,7 @@ pub fn run() {
                 .build()?;
 
             let menu = MenuBuilder::new(app)
+                .item(&molt_menu)
                 .item(&file_menu)
                 .item(&edit_menu)
                 .item(&window_menu)
