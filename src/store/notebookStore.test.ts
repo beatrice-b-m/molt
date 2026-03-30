@@ -461,3 +461,67 @@ describe("setCommandMode", () => {
 		expect(useNotebookStore.getState().notebooks).toEqual(nbsBefore);
 	});
 });
+
+
+// ─── no-op guards ─────────────────────────────────────────────────────────────
+
+describe("no-op guards", () => {
+	it("updateCellSource does not mutate state when source is unchanged", () => {
+		const id = firstCellId(0);
+		useNotebookStore.getState().updateCellSource(0, id, "x = 1");
+		const nbBefore = useNotebookStore.getState().notebooks;
+		useNotebookStore.getState().updateCellSource(0, id, "x = 1");
+		const nbAfter = useNotebookStore.getState().notebooks;
+		expect(nbAfter).toBe(nbBefore);
+	});
+
+	it("setCellState does not mutate state when state is unchanged", () => {
+		const id = firstCellId(0);
+		useNotebookStore.getState().setCellState(0, id, "running");
+		const nbBefore = useNotebookStore.getState().notebooks;
+		useNotebookStore.getState().setCellState(0, id, "running");
+		const nbAfter = useNotebookStore.getState().notebooks;
+		expect(nbAfter).toBe(nbBefore);
+	});
+
+	it("setCellOutputs does not mutate state when outputs reference is unchanged", () => {
+		const id = firstCellId(0);
+		const outputs = [{ outputType: "stream" as const, text: "hi" }];
+		useNotebookStore.getState().setCellOutputs(0, id, outputs);
+		const nbBefore = useNotebookStore.getState().notebooks;
+		useNotebookStore.getState().setCellOutputs(0, id, outputs);
+		const nbAfter = useNotebookStore.getState().notebooks;
+		expect(nbAfter).toBe(nbBefore);
+	});
+
+	it("setCellExecutionCount does not mutate state when count is unchanged", () => {
+		const id = firstCellId(0);
+		useNotebookStore.getState().setCellExecutionCount(0, id, 5);
+		const nbBefore = useNotebookStore.getState().notebooks;
+		useNotebookStore.getState().setCellExecutionCount(0, id, 5);
+		const nbAfter = useNotebookStore.getState().notebooks;
+		expect(nbAfter).toBe(nbBefore);
+	});
+
+	it("updateKernelState does not mutate state when kernel state is unchanged", () => {
+		useNotebookStore.getState().updateKernelState(0, "idle");
+		const nbBefore = useNotebookStore.getState().notebooks;
+		useNotebookStore.getState().updateKernelState(0, "idle");
+		const nbAfter = useNotebookStore.getState().notebooks;
+		expect(nbAfter).toBe(nbBefore);
+	});
+
+	it("updateCellSource still updates when source actually changes", () => {
+		const id = firstCellId(0);
+		useNotebookStore.getState().updateCellSource(0, id, "x = 1");
+		useNotebookStore.getState().updateCellSource(0, id, "x = 2");
+		expect(cells(0).find((c) => c.id === id)!.source).toBe("x = 2");
+	});
+
+	it("setCellState still updates when state actually changes", () => {
+		const id = firstCellId(0);
+		useNotebookStore.getState().setCellState(0, id, "running");
+		useNotebookStore.getState().setCellState(0, id, "error");
+		expect(cells(0).find((c) => c.id === id)!.state).toBe("error");
+	});
+});

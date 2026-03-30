@@ -25,9 +25,10 @@ function extractPersistableState(): string {
 
 export function usePersistence(): boolean {
 	const [loaded, setLoaded] = useState(false);
-	// Keep a stable ref so the save subscription can check without stale closure.
-	const loadedRef = useRef(false);
 	const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+	// Track the last JSON snapshot that was successfully sent to the backend,
+	// so we can skip redundant writes when only non-persisted state changed.
+	const lastSavedDataRef = useRef<string | null>(null);
 
 	// Phase 1 — load persisted data once on mount, then signal ready.
 	useEffect(() => {
@@ -47,6 +48,9 @@ export function usePersistence(): boolean {
 							}>;
 						};
 						useNotebookStore.getState().initializeFromPersisted(parsed.tabs);
+						// Snapshot the just-loaded state so the first subscription
+						// callback doesn't immediately re-save the same data.
+						lastSavedDataRef.current = extractPersistableState();
 					} catch (e) {
 						console.error("Failed to parse persisted notebooks", e);
 					}
@@ -57,7 +61,6 @@ export function usePersistence(): boolean {
 				console.error("load_notebooks failed", e);
 			})
 			.finally(() => {
-				loadedRef.current = true;
 				setLoaded(true);
 			});
 	}, []);
@@ -75,7 +78,10 @@ export function usePersistence(): boolean {
 			}
 			timerRef.current = setTimeout(() => {
 				timerRef.current = null;
-				invoke("save_notebooks", { data: extractPersistableState() }).catch(
+				const data = extractPersistableState();
+				if (data === lastSavedDataRef.current) return;
+				lastSavedDataRef.current = data;
+				invoke("save_notebooks", { data }).catch(
 					(e) => console.error("save_notebooks failed", e),
 				);
 			}, 1500);
@@ -87,9 +93,13 @@ export function usePersistence(): boolean {
 			if (timerRef.current !== null) {
 				clearTimeout(timerRef.current);
 				timerRef.current = null;
-				invoke("save_notebooks", { data: extractPersistableState() }).catch(
-					(e) => console.error("save_notebooks flush failed", e),
-				);
+				const data = extractPersistableState();
+				if (data !== lastSavedDataRef.current) {
+					lastSavedDataRef.current = data;
+					invoke("save_notebooks", { data }).catch(
+						(e) => console.error("save_notebooks flush failed", e),
+					);
+				}
 			}
 		};
 	}, [loaded]);

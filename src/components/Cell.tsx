@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import { EditorView, keymap } from "@codemirror/view";
 import { EditorState, Prec } from "@codemirror/state";
 import { python } from "@codemirror/lang-python";
@@ -18,12 +18,12 @@ interface Props {
 	isLast?: boolean;
 }
 
-export function Cell({ cell, tabIndex }: Props) {
+const CellInner = function Cell({ cell, tabIndex }: Props) {
 	const deleteCell = useNotebookStore((s) => s.deleteCell);
 	const moveCellUp = useNotebookStore((s) => s.moveCellUp);
 	const moveCellDown = useNotebookStore((s) => s.moveCellDown);
 	const updateCellSource = useNotebookStore((s) => s.updateCellSource);
-	const focusedCellId = useNotebookStore((s) => s.focusedCellId);
+	const isFocused = useNotebookStore((s) => s.focusedCellId === cell.id);
 	const setFocusedCellId = useNotebookStore((s) => s.setFocusedCellId);
 
 	const [hovered, setHovered] = useState(false);
@@ -35,7 +35,7 @@ export function Cell({ cell, tabIndex }: Props) {
 	const updateCellSourceRef = useRef(updateCellSource);
 	useEffect(() => {
 		updateCellSourceRef.current = updateCellSource;
-	});
+	}, [updateCellSource]);
 
 	useEffect(() => {
 		if (!editorContainerRef.current) return;
@@ -106,11 +106,11 @@ export function Cell({ cell, tabIndex }: Props) {
 	}, [cell.source]);
 
 	useEffect(() => {
-		if (focusedCellId === cell.id && viewRef.current) {
+		if (isFocused && viewRef.current) {
 			viewRef.current.focus();
 			setFocusedCellId(null);
 		}
-	}, [focusedCellId, cell.id, setFocusedCellId]);
+	}, [isFocused, setFocusedCellId]);
 
 	function handleRunClick() {
 		if (cell.state === "running") {
@@ -227,7 +227,9 @@ export function Cell({ cell, tabIndex }: Props) {
 			<CellOutputView outputs={cell.outputs} />
 		</div>
 	);
-}
+};
+
+export const Cell = memo(CellInner);
 
 function ControlButton({
 	children,

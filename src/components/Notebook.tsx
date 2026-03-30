@@ -74,11 +74,11 @@ function BetweenCells({ tabIndex, afterCellId }: BetweenCellsProps) {
 
 export function Notebook() {
 	const activeTab = useNotebookStore((s) => s.activeTab);
-	const notebook = useNotebookStore((s) => s.notebooks[s.activeTab]);
+	const cells = useNotebookStore((s) => s.notebooks[s.activeTab].cells);
 
 	const lastCellId =
-		notebook.cells.length > 0
-			? notebook.cells[notebook.cells.length - 1].id
+		cells.length > 0
+			? cells[cells.length - 1].id
 			: null;
 
 	return (
@@ -90,15 +90,15 @@ export function Notebook() {
 				background: "var(--bg-primary)",
 			}}
 		>
-			{notebook.cells.map((cell, i) => (
+			{cells.map((cell, i) => (
 				<div key={cell.id}>
 					{i > 0 && (
 						<BetweenCells
 							tabIndex={activeTab}
-							afterCellId={notebook.cells[i - 1].id}
+							afterCellId={cells[i - 1].id}
 						/>
 					)}
-					<Cell tabIndex={activeTab} cell={cell} isLast={i === notebook.cells.length - 1} />
+					<Cell tabIndex={activeTab} cell={cell} isLast={i === cells.length - 1} />
 				</div>
 			))}
 

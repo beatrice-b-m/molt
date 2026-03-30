@@ -122,6 +122,8 @@ export const useNotebookStore = create<NotebookStore>((set, get) => ({
 	},
 
 	updateKernelState: (tabIndex, state) => {
+		const nb = get().notebooks.find((n) => n.tabIndex === tabIndex);
+		if (!nb || nb.kernelState === state) return;
 		set((s) => ({
 			notebooks: s.notebooks.map((nb) =>
 				nb.tabIndex === tabIndex ? { ...nb, kernelState: state } : nb,
@@ -204,6 +206,10 @@ export const useNotebookStore = create<NotebookStore>((set, get) => ({
 	},
 
 	updateCellSource: (tabIndex, cellId, source) => {
+		const nb = get().notebooks.find((n) => n.tabIndex === tabIndex);
+		if (!nb) return;
+		const cell = nb.cells.find((c) => c.id === cellId);
+		if (!cell || cell.source === source) return;
 		set((s) => ({
 			notebooks: s.notebooks.map((nb) =>
 				nb.tabIndex !== tabIndex
@@ -214,6 +220,10 @@ export const useNotebookStore = create<NotebookStore>((set, get) => ({
 	},
 
 	setCellState: (tabIndex, cellId, state) => {
+		const nb = get().notebooks.find((n) => n.tabIndex === tabIndex);
+		if (!nb) return;
+		const cell = nb.cells.find((c) => c.id === cellId);
+		if (!cell || cell.state === state) return;
 		set((s) => ({
 			notebooks: s.notebooks.map((nb) =>
 				nb.tabIndex !== tabIndex
@@ -224,6 +234,10 @@ export const useNotebookStore = create<NotebookStore>((set, get) => ({
 	},
 
 	setCellOutputs: (tabIndex, cellId, outputs) => {
+		const nb = get().notebooks.find((n) => n.tabIndex === tabIndex);
+		if (!nb) return;
+		const cell = nb.cells.find((c) => c.id === cellId);
+		if (!cell || cell.outputs === outputs) return;
 		set((s) => ({
 			notebooks: s.notebooks.map((nb) =>
 				nb.tabIndex !== tabIndex
@@ -234,16 +248,20 @@ export const useNotebookStore = create<NotebookStore>((set, get) => ({
 	},
 
 	setCellExecutionCount: (tabIndex, cellId, count) => {
+		const nb = get().notebooks.find((n) => n.tabIndex === tabIndex);
+		if (!nb) return;
+		const cell = nb.cells.find((c) => c.id === cellId);
+		if (!cell || cell.executionCount === count) return;
 		set((s) => ({
 			notebooks: s.notebooks.map((nb) =>
 				nb.tabIndex !== tabIndex
 					? nb
 					: {
-							...nb,
-							cells: patchCell(nb.cells, cellId, {
-								executionCount: count,
-							}),
-						},
+						...nb,
+						cells: patchCell(nb.cells, cellId, {
+							executionCount: count,
+						}),
+					},
 			),
 		}));
 	},

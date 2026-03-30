@@ -77,10 +77,15 @@ impl KernelManager {
 
     /// Ensure a kernel exists for the given tab. Spawns if needed.
     pub async fn ensure_kernel(&self, tab_index: u8) -> Result<KernelState, String> {
-        let mut kernels = self.kernels.lock().await;
-        if let Some(instance) = kernels.get(&tab_index) {
-            let inst = instance.lock().await;
-            return Ok(inst.state);
+        // Check if kernel already exists — clone the Arc, then drop map lock.
+        {
+            let kernels = self.kernels.lock().await;
+            if let Some(instance) = kernels.get(&tab_index) {
+                let instance = instance.clone();
+                drop(kernels);
+                let inst = instance.lock().await;
+                return Ok(inst.state);
+            }
         }
 
         // Spawn a new kernel
@@ -89,6 +94,7 @@ impl KernelManager {
             .await
             .map_err(|e| format!("Failed to spawn kernel for tab {}: {}", tab_index, e))?;
         let state = instance.lock().await.state;
+        let mut kernels = self.kernels.lock().await;
         kernels.insert(tab_index, instance);
         Ok(state)
     }
@@ -303,8 +309,11 @@ impl KernelManager {
 
     /// Get current kernel state for a tab.
     pub async fn get_state(&self, tab_index: u8) -> KernelState {
-        let kernels = self.kernels.lock().await;
-        match kernels.get(&tab_index) {
+        let instance = {
+            let kernels = self.kernels.lock().await;
+            kernels.get(&tab_index).cloned()
+        };
+        match instance {
             Some(instance) => instance.lock().await.state,
             None => KernelState::Stopped,
         }
@@ -312,8 +321,11 @@ impl KernelManager {
 
     /// Kill the kernel process for a tab.
     async fn kill_kernel(&self, tab_index: u8) {
-        let mut kernels = self.kernels.lock().await;
-        if let Some(instance) = kernels.remove(&tab_index) {
+        let instance = {
+            let mut kernels = self.kernels.lock().await;
+            kernels.remove(&tab_index)
+        };
+        if let Some(instance) = instance {
             let mut inst = instance.lock().await;
             // Drop the request channel to signal the I/O loop to exit
             inst.request_tx = None;
