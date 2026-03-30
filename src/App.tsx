@@ -42,7 +42,6 @@ function setEffectsClass(enabled: boolean) {
 
 export function App() {
 	const activeTab = useNotebookStore((s) => s.activeTab);
-	const notebooks = useNotebookStore((s) => s.notebooks);
 	const setActiveTab = useNotebookStore((s) => s.setActiveTab);
 	const focusedCellId = useNotebookStore((s) => s.focusedCellId);
 	const isCommandMode = useNotebookStore((s) => s.isCommandMode);
