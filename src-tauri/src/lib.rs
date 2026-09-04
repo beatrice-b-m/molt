@@ -28,7 +28,10 @@ fn open_settings_window(app_handle: &tauri::AppHandle) {
     }
 }
 
-fn set_main_window_native_effects(app_handle: &tauri::AppHandle, enabled: bool) -> Result<(), String> {
+fn set_main_window_native_effects(
+    app_handle: &tauri::AppHandle,
+    enabled: bool,
+) -> Result<(), String> {
     let window = app_handle
         .get_webview_window("main")
         .ok_or_else(|| "Main window not found".to_string())?;
@@ -53,7 +56,6 @@ fn set_main_window_native_effects(app_handle: &tauri::AppHandle, enabled: bool) 
     Ok(())
 }
 
-
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let app = tauri::Builder::default()
@@ -69,8 +71,8 @@ pub fn run() {
             commands::set_native_effects,
             commands::get_config,
             commands::save_config,
-			commands::load_notebooks,
-			commands::save_notebooks,
+            commands::load_notebooks,
+            commands::save_notebooks,
         ])
         .setup(|app| {
             // Validate Python interpreter at startup
@@ -90,9 +92,7 @@ pub fn run() {
             // The first submenu on macOS is always the app-name menu; it must
             // include Quit to give Cmd+Q a registered menu target. Tauri's
             // set_menu() replaces the default menu wholesale, so we rebuild it.
-            let molt_menu = SubmenuBuilder::new(app, "Molt")
-                .quit()
-                .build()?;
+            let molt_menu = SubmenuBuilder::new(app, "Molt").quit().build()?;
 
             let file_menu = SubmenuBuilder::new(app, "File")
                 .text("settings", "Settings...")
@@ -110,9 +110,7 @@ pub fn run() {
                 .select_all()
                 .build()?;
 
-            let window_menu = SubmenuBuilder::new(app, "Window")
-                .minimize()
-                .build()?;
+            let window_menu = SubmenuBuilder::new(app, "Window").minimize().build()?;
 
             let menu = MenuBuilder::new(app)
                 .item(&molt_menu)
@@ -146,8 +144,7 @@ pub fn run() {
     app.run(|app_handle, event| {
         if let RunEvent::ExitRequested { .. } = &event {
             let km = app_handle.state::<kernel::KernelManager>();
-            let rt = tokio::runtime::Handle::current();
-            rt.block_on(km.shutdown());
+            tauri::async_runtime::block_on(km.shutdown());
             log::info!("All kernel subprocesses terminated");
         }
     });
