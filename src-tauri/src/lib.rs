@@ -5,6 +5,7 @@ mod commands;
 mod config;
 mod kernel;
 mod persistence;
+mod storage;
 
 /// Opens (or focuses) the settings window.
 fn open_settings_window(app_handle: &tauri::AppHandle) {

@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import type { PersistedTab } from "../services/persistence";
 import type { Cell, CellOutput, KernelState, Notebook } from "../types/notebook";
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
@@ -96,7 +97,7 @@ export interface NotebookStore {
 	 */
 	incrementExecutionCounter: (tabIndex: number) => number;
 	/** Replace cell contents from persisted data (source only, no outputs). */
-	initializeFromPersisted: (tabs: Array<{ tabIndex: number; cells: Array<{ id: string; type: "code" | "markdown"; source: string }> }>) => void;
+	initializeFromPersisted: (tabs: PersistedTab[]) => void;
 	/** Reset a tab to its initial base state. */
 	clearTab: (tabIndex: number) => void;
 }

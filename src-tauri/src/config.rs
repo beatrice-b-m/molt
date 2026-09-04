@@ -1,9 +1,9 @@
-use tauri::Manager;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use std::sync::Mutex;
+use tauri::Manager;
 
-/// Application configuration from ~/.config/molt/config.toml
+/// Application configuration in the platform application data directory.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AppConfig {
     #[serde(default = "default_python")]
@@ -27,7 +27,6 @@ pub struct AppSection {
     #[serde(default = "default_native_effects")]
     pub native_effects: bool,
 }
-
 
 fn default_python() -> PythonConfig {
     PythonConfig {
@@ -79,46 +78,29 @@ impl ConfigState {
     }
 }
 
-/// Returns the config file path: ~/.config/molt/config.toml
-fn config_path() -> PathBuf {
-    let base = dirs::config_dir().unwrap_or_else(|| PathBuf::from("."));
-    base.join("molt").join("config.toml")
-}
-
-/// Reads config from disk, creating the file with defaults if it doesn't exist.
+/// Read saved configuration, creating defaults on first launch.
 pub fn load_config() -> AppConfig {
-    let path = config_path();
-    if !path.exists() {
-        // Create parent directories and write defaults
-        if let Some(parent) = path.parent() {
-            let _ = std::fs::create_dir_all(parent);
+    let result = (|| -> Result<AppConfig, String> {
+        let path = crate::storage::data_path("config.toml")?;
+        match std::fs::read_to_string(&path) {
+            Ok(contents) => toml::from_str(&contents).map_err(|e| e.to_string()),
+            Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
+                let config = AppConfig::default();
+                save_config(&config)?;
+                Ok(config)
+            }
+            Err(e) => Err(e.to_string()),
         }
-        let default = AppConfig::default();
-        let content = format!(
-            "[python]\n# Path to the Python interpreter to use for all kernels.\n# Supports absolute paths or names resolvable on PATH.\n# Default: \"python3\"\ninterpreter = \"{}\"\n\n[app]\n# Launch Molt automatically at macOS login.\nauto_launch = {}\n\n# Number of tabs. Currently fixed at 4; reserved for future use.\ntab_count = {}\n\n# Enable native macOS glass/vibrancy window effects.\nnative_effects = {}\n",
-            default.python.interpreter, default.app.auto_launch, default.app.tab_count, default.app.native_effects,
-        );
-        let _ = std::fs::write(&path, content);
-        return default;
-    }
-
-    match std::fs::read_to_string(&path) {
-        Ok(contents) => toml::from_str(&contents).unwrap_or_default(),
-        Err(_) => AppConfig::default(),
-    }
+    })();
+    result.unwrap_or_else(|error| {
+        log::warn!("Could not load configuration; using defaults: {}", error);
+        AppConfig::default()
+    })
 }
 
-/// Writes the given config to disk, preserving human-readable formatting.
 pub fn save_config(config: &AppConfig) -> Result<(), String> {
-    let path = config_path();
-    if let Some(parent) = path.parent() {
-        std::fs::create_dir_all(parent).map_err(|e| format!("Failed to create config directory: {}", e))?;
-    }
-    let content = format!(
-        "[python]\n# Path to the Python interpreter to use for all kernels.\n# Supports absolute paths or names resolvable on PATH.\n# Default: \"python3\"\ninterpreter = \"{}\"\n\n[app]\n# Launch Molt automatically at macOS login.\nauto_launch = {}\n\n# Number of tabs. Currently fixed at 4; reserved for future use.\ntab_count = {}\n\n# Enable native macOS glass/vibrancy window effects.\nnative_effects = {}\n",
-        config.python.interpreter, config.app.auto_launch, config.app.tab_count, config.app.native_effects,
-    );
-    std::fs::write(&path, content).map_err(|e| format!("Failed to write config: {}", e))
+    let content = toml::to_string_pretty(config).map_err(|e| e.to_string())?;
+    crate::storage::atomic_write(&crate::storage::data_path("config.toml")?, &content)
 }
 
 /// Resolves the configured interpreter string.
@@ -141,7 +123,7 @@ pub fn validate_interpreter() -> Option<String> {
             String::from_utf8_lossy(&output.stderr)
         )),
         Err(e) => Some(format!(
-            "Python interpreter '{}' not found: {}. Update ~/.config/molt/config.toml",
+            "Python interpreter '{}' not found: {}. Update the Python interpreter in Settings and relaunch Molt",
             interpreter, e
         )),
     }
@@ -159,18 +141,26 @@ pub fn resolve_kernel_script_path(app_handle: &tauri::AppHandle) -> PathBuf {
         .unwrap_or_else(|| PathBuf::from("resources/kernel_server.py"))
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
+    fn interpreter_with_quotes_and_backslashes_round_trips() {
+        let mut config = AppConfig::default();
+        config.python.interpreter = "a\"b\\c/python3".into();
+        let serialized = toml::to_string_pretty(&config).unwrap();
+        let parsed: AppConfig = toml::from_str(&serialized).unwrap();
+        assert_eq!(parsed.python.interpreter, config.python.interpreter);
+    }
+
+    #[test]
     fn default_config_has_expected_values() {
         let cfg = AppConfig::default();
         assert_eq!(cfg.python.interpreter, "python3");
-        assert_eq!(cfg.app.auto_launch, false);
+        assert!(!cfg.app.auto_launch);
         assert_eq!(cfg.app.tab_count, 4);
-        assert_eq!(cfg.app.native_effects, true);
+        assert!(cfg.app.native_effects);
     }
 
     #[test]
@@ -185,18 +175,18 @@ tab_count = 2
 "#;
         let cfg: AppConfig = toml::from_str(toml).expect("parse failed");
         assert_eq!(cfg.python.interpreter, "/usr/local/bin/python3.12");
-        assert_eq!(cfg.app.auto_launch, true);
+        assert!(cfg.app.auto_launch);
         assert_eq!(cfg.app.tab_count, 2);
-        assert_eq!(cfg.app.native_effects, true);
+        assert!(cfg.app.native_effects);
     }
 
     #[test]
     fn toml_empty_string_produces_defaults() {
         let cfg: AppConfig = toml::from_str("").expect("parse failed");
         assert_eq!(cfg.python.interpreter, "python3");
-        assert_eq!(cfg.app.auto_launch, false);
+        assert!(!cfg.app.auto_launch);
         assert_eq!(cfg.app.tab_count, 4);
-        assert_eq!(cfg.app.native_effects, true);
+        assert!(cfg.app.native_effects);
     }
 
     #[test]
@@ -208,9 +198,9 @@ interpreter = "pypy3"
         let cfg: AppConfig = toml::from_str(toml).expect("parse failed");
         assert_eq!(cfg.python.interpreter, "pypy3");
         // app section absent — must fall back to defaults
-        assert_eq!(cfg.app.auto_launch, false);
+        assert!(!cfg.app.auto_launch);
         assert_eq!(cfg.app.tab_count, 4);
-        assert_eq!(cfg.app.native_effects, true);
+        assert!(cfg.app.native_effects);
     }
     #[test]
     fn toml_parses_native_effects_field() {
@@ -219,7 +209,7 @@ interpreter = "pypy3"
 native_effects = false
 "#;
         let cfg: AppConfig = toml::from_str(toml).expect("parse failed");
-        assert_eq!(cfg.app.native_effects, false);
+        assert!(!cfg.app.native_effects);
     }
 
     #[test]
@@ -229,7 +219,6 @@ native_effects = false
 theme = "github-light"
 "#;
         let cfg: AppConfig = toml::from_str(toml).expect("parse failed");
-        assert_eq!(cfg.app.native_effects, true);
+        assert!(cfg.app.native_effects);
     }
-
 }

@@ -53,7 +53,7 @@ export function App() {
 	const updateKernelState = useNotebookStore((s) => s.updateKernelState);
 
 	const [configWarning, setConfigWarning] = useState<string | null>(null);
-	const notebooksLoaded = usePersistence();
+	const { loaded: notebooksLoaded, error: persistenceError } = usePersistence();
 
 	// Track the timestamp of the most recent 'd' keydown for DD detection.
 	const lastDKeyTime = useRef<number>(0);
@@ -176,6 +176,7 @@ export function App() {
 
 			{/* Config warning banner — only shown when present */}
 			{configWarning && <WarningBanner message={configWarning} />}
+			{persistenceError && <WarningBanner message={persistenceError} />}
 
 			<TabBar />
 			<Toolbar />
