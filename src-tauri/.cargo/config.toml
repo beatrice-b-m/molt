@@ -1,19 +1,2 @@
-# Cargo build configuration for Molt
-#
-# CI-specific release profile overrides:
-# `cargo tauri build` hardcodes the `release` profile and does not support
-# custom --profile flags. To skip expensive optimisations during CI builds
-# (e.g. integration/smoke tests that don't ship to users), override via
-# environment variables in the workflow:
-#
-#   CARGO_PROFILE_RELEASE_OPT_LEVEL=0
-#   CARGO_PROFILE_RELEASE_CODEGEN_UNITS=256
-#   CARGO_PROFILE_RELEASE_LTO=off
-#
-# Do NOT set these when building actual release artifacts.
-#
-# For cargo build/test/clippy, use the named `ci` profile defined in
-# Cargo.toml instead:  cargo test --profile ci
-
 [net]
 git-fetch-with-cli = true

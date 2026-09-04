@@ -1,11 +1,11 @@
 [package]
 name = "molt"
 version = "0.1.0"
-description = "A macOS menu bar Python notebook scratchpad"
+description = "A macOS Python notebook scratchpad"
 authors = []
 license = "MIT"
 edition = "2021"
-rust-version = "1.77.2"
+rust-version = "1.88"
 
 [lib]
 name = "molt_lib"
@@ -26,11 +26,3 @@ uuid = { version = "1", features = ["v4"] }
 dirs = "6"
 libc = "0.2"
 window-vibrancy = "0.6"
-
-
-# Fast CI builds: cargo build --profile ci
-# Skips optimizations to prioritise compile speed over runtime performance.
-[profile.ci]
-inherits = "dev"
-opt-level = 0
-codegen-units = 256

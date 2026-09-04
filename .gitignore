@@ -7,8 +7,10 @@ dist/
 # Rust target
 src-tauri/target/
 
-# Bun
+# Local environments and alternate package-manager artifacts
+.venv/
 bun.lock
+bun.lockb
 
 # OS
 .DS_Store

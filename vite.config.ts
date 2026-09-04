@@ -22,16 +22,16 @@ export default defineConfig({
 	envPrefix: ["VITE_", "TAURI_"],
 
 	build: {
-		rollupOptions: {
+		rolldownOptions: {
 			input: {
-				main: resolve(__dirname, "index.html"),
-				settings: resolve(__dirname, "settings.html"),
+				main: resolve(import.meta.dirname, "index.html"),
+				settings: resolve(import.meta.dirname, "settings.html"),
 			},
 		},
 		// Tauri uses Chromium on Windows and WebKit on macOS/Linux
 		target: "safari14",
 		// Don't minify for debug builds
-		minify: !process.env.TAURI_DEBUG ? "esbuild" : false,
+		minify: !process.env.TAURI_DEBUG,
 		// Produce sourcemaps for debug builds
 		sourcemap: !!process.env.TAURI_DEBUG,
 	},
