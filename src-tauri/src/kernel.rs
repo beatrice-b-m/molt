@@ -133,6 +133,43 @@ impl KernelManager {
             Self::kernel_io_loop(instance_ref, stdin, stdout, request_rx, tab_index).await;
         });
 
+        // Do not report ready merely because an executable was spawned. Verify
+        // that the bundled server has installed its handlers and speaks our protocol.
+        let (tx, rx) = oneshot::channel();
+        let sender = instance
+            .lock()
+            .await
+            .request_tx
+            .clone()
+            .ok_or("Kernel channel closed")?;
+        let readiness = async {
+            sender
+                .send(PendingRequest {
+                    request: KernelRequest {
+                        id: uuid::Uuid::new_v4().to_string(),
+                        msg_type: "ping".into(),
+                        code: None,
+                    },
+                    responder: tx,
+                })
+                .await
+                .map_err(|_| "Kernel startup channel closed".to_string())?;
+            let response = rx
+                .await
+                .map_err(|_| "Kernel startup response closed".to_string())??;
+            if response.stdout == "pong" && response.error.is_none() {
+                Ok(())
+            } else {
+                Err("Kernel failed its startup handshake".to_string())
+            }
+        };
+        let ready = tokio::time::timeout(std::time::Duration::from_secs(5), readiness)
+            .await
+            .unwrap_or_else(|_| Err("Kernel startup timed out".into()));
+        if let Err(error) = ready {
+            Self::stop_instance(&instance).await;
+            return Err(error);
+        }
         Ok(instance)
     }
 
@@ -385,6 +422,14 @@ mod tests {
         tokio::time::timeout(Duration::from_secs(8), manager.execute(tab, "test", code))
             .await
             .expect("execution timed out")
+    }
+
+    #[tokio::test]
+    async fn executable_without_kernel_protocol_is_not_reported_ready() {
+        let manager = KernelManager::new("/usr/bin/true".into(), PathBuf::from("unused"));
+        assert!(manager.ensure_kernel(0).await.is_err());
+        assert_eq!(manager.get_state(0).await, KernelState::Stopped);
+        manager.shutdown().await;
     }
 
     #[tokio::test]

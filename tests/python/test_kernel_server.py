@@ -7,6 +7,9 @@ fresh process so state cannot leak between tests.
 """
 
 import json
+import os
+import select
+import time
 import subprocess
 import sys
 import uuid
@@ -26,6 +29,7 @@ class KernelClient:
 
     def __init__(self, proc: subprocess.Popen):
         self._proc = proc
+        self._buffer = b""
 
     def send(self, request: dict) -> dict:
         """Write *request* as a JSON line and block until a response line arrives."""
@@ -33,20 +37,28 @@ class KernelClient:
         self._proc.stdin.write(line.encode())
         self._proc.stdin.flush()
 
-        raw = self._proc.stdout.readline()
-        if not raw:
-            raise RuntimeError("Kernel process closed stdout unexpectedly")
-        return json.loads(raw.decode())
+        return self.read_response()
 
     def send_raw(self, text: str) -> dict:
         """Write arbitrary bytes (bypassing JSON encoding) — for malformed-input tests."""
         self._proc.stdin.write((text + "\n").encode())
         self._proc.stdin.flush()
 
-        raw = self._proc.stdout.readline()
-        if not raw:
-            raise RuntimeError("Kernel process closed stdout unexpectedly")
-        return json.loads(raw.decode())
+        return self.read_response()
+
+    def read_response(self) -> dict:
+        deadline = time.monotonic() + READ_TIMEOUT
+        while b"\n" not in self._buffer:
+            remaining = max(0, deadline - time.monotonic())
+            ready, _, _ = select.select([self._proc.stdout], [], [], remaining)
+            if not ready:
+                raise TimeoutError("Kernel response timed out")
+            chunk = os.read(self._proc.stdout.fileno(), 65536)
+            if not chunk:
+                raise RuntimeError("Kernel process closed stdout unexpectedly")
+            self._buffer += chunk
+        line, self._buffer = self._buffer.split(b"\n", 1)
+        return json.loads(line)
 
 
 @pytest.fixture
@@ -65,14 +77,14 @@ def kernel():
 
     client = KernelClient(proc)
 
-    # Apply a timeout at the socket level so individual reads cannot block
-    # forever if the server stalls.
-    proc.stdout._timeout = READ_TIMEOUT  # type: ignore[attr-defined]
-
-    yield client
-
-    proc.kill()
-    proc.wait()
+    try:
+        yield client
+    finally:
+        proc.kill()
+        proc.wait(timeout=READ_TIMEOUT)
+        proc.stdin.close()
+        proc.stdout.close()
+        proc.stderr.close()
 
 
 # ---------------------------------------------------------------------------
@@ -158,3 +170,29 @@ def test_invalid_json(kernel):
     assert resp["type"] == "result"
     assert resp["error"] is not None
     assert "Invalid JSON" in resp["error"]
+
+
+def test_trailing_expression_and_previous_result(kernel):
+    assert kernel.send(_req("execute", "6 * 7"))["stdout"] == "42\n"
+    assert kernel.send(_req("execute", "_ + 1"))["stdout"] == "43\n"
+    assert kernel.send(_req("execute", "None"))["stdout"] == ""
+
+
+def test_system_exit_does_not_kill_kernel(kernel):
+    assert "SystemExit" in kernel.send(_req("execute", "import sys; sys.exit(1)"))["error"]
+    assert kernel.send(_req("ping"))["stdout"] == "pong"
+
+
+def test_input_cannot_consume_protocol(kernel):
+    assert "EOFError" in kernel.send(_req("execute", "input('value: ')"))["error"]
+    assert kernel.send(_req("ping"))["stdout"] == "pong"
+
+
+@pytest.mark.parametrize("payload", [None, [], 42, "text"])
+def test_non_object_requests_do_not_kill_kernel(kernel, payload):
+    assert kernel.send_raw(json.dumps(payload))["error"] is not None
+    assert kernel.send(_req("ping"))["stdout"] == "pong"
+
+
+def test_main_namespace(kernel):
+    assert kernel.send(_req("execute", "__name__"))["stdout"] == "'__main__'\n"
