@@ -1,21 +1,20 @@
 import { memo, useEffect, useRef, useState } from "react";
 import { EditorView, keymap } from "@codemirror/view";
 import { EditorState, Prec } from "@codemirror/state";
+import { indentUnit } from "@codemirror/language";
 import { python } from "@codemirror/lang-python";
 import { defaultKeymap, indentWithTab } from "@codemirror/commands";
 import { basicSetup } from "codemirror";
 import type { Cell as CellType } from "../types/notebook";
 import { useNotebookStore } from "../store/notebookStore";
-import { interruptKernel } from "../hooks/useKernel";
-import { executeSingleCell } from "../hooks/execution";
+import { interruptKernel } from "../services/backend";
+import { executeSingleCell } from "../services/execution";
 import { CellOutput as CellOutputView } from "./CellOutput";
 import { buildEditorExtensions } from "../theme/codemirror";
 
 interface Props {
 	cell: CellType;
 	tabIndex: number;
-	/** Whether this is the last cell in the notebook (for Shift+Enter auto-append). */
-	isLast?: boolean;
 }
 
 const CellInner = function Cell({ cell, tabIndex }: Props) {
@@ -23,8 +22,8 @@ const CellInner = function Cell({ cell, tabIndex }: Props) {
 	const moveCellUp = useNotebookStore((s) => s.moveCellUp);
 	const moveCellDown = useNotebookStore((s) => s.moveCellDown);
 	const updateCellSource = useNotebookStore((s) => s.updateCellSource);
+	const isCommandMode = useNotebookStore((s) => s.isCommandMode);
 	const isFocused = useNotebookStore((s) => s.focusedCellId === cell.id);
-	const setFocusedCellId = useNotebookStore((s) => s.setFocusedCellId);
 
 	const [hovered, setHovered] = useState(false);
 	const editorContainerRef = useRef<HTMLDivElement>(null);
@@ -52,12 +51,19 @@ const CellInner = function Cell({ cell, tabIndex }: Props) {
 				extensions: [
 					basicSetup,
 					python(),
+					indentUnit.of("    "),
+					EditorView.domEventHandlers({
+						focus: () => {
+							useNotebookStore.getState().setFocusedCellId(cellIdRef.current);
+							useNotebookStore.getState().setCommandMode(false);
+						},
+					}),
 					Prec.highest(
 						keymap.of([
 							{
 								key: "Shift-Enter",
 								run: () => {
-									executeSingleCell(tabIndexRef.current, cellIdRef.current);
+									void executeSingleCell(tabIndexRef.current, cellIdRef.current, true);
 									return true;
 								},
 							},
@@ -106,15 +112,14 @@ const CellInner = function Cell({ cell, tabIndex }: Props) {
 	}, [cell.source]);
 
 	useEffect(() => {
-		if (isFocused && viewRef.current) {
+		if (isFocused && !isCommandMode && viewRef.current) {
 			viewRef.current.focus();
-			setFocusedCellId(null);
 		}
-	}, [isFocused, setFocusedCellId]);
+	}, [isFocused, isCommandMode]);
 
 	function handleRunClick() {
 		if (cell.state === "running") {
-			interruptKernel(tabIndex).catch(() => {});
+			interruptKernel(tabIndex).catch((error) => console.error("Interrupt failed", error));
 		} else {
 			executeSingleCell(tabIndex, cell.id);
 		}

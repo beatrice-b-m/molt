@@ -1,7 +1,6 @@
 import { memo } from "react";
 import { useNotebookStore } from "../store/notebookStore";
-import { restartKernel, stopKernel } from "../hooks/useKernel";
-import { executeSingleCell } from "../hooks/execution";
+import { clearNotebook, executeAllCells, restartTab, stopTab } from "../services/execution";
 
 const STATE_COLOR: Record<string, string> = {
 	idle: "var(--success)",
@@ -24,69 +23,24 @@ const buttonStyle: React.CSSProperties = {
 	transition: "color var(--motion-fast) var(--ease-standard), background var(--motion-fast) var(--ease-standard), border-color var(--motion-fast) var(--ease-standard), box-shadow var(--motion-fast) var(--ease-standard), opacity var(--motion-fast) var(--ease-standard)",
 };
 
-/**
- * Toolbar subscribes only to `kernelState` (a primitive string), not the
- * full notebook object.  When switching between tabs that share the same
- * kernel state, Zustand's Object.is check returns true and no re-render
- * is triggered — eliminating the flicker caused by unnecessary DOM
- * reconciliation during heavy sibling (Notebook) updates.
- *
- * `activeTab` is read from getState() inside event handlers instead of
- * being subscribed to, because its value only matters at click-time.
- */
+// Read the active tab at click time; subscribe only to visible kernel status.
 export const Toolbar = memo(function Toolbar() {
 	// Primitive selector — only re-renders when the value actually changes.
 	const kernelState = useNotebookStore((s) => s.notebooks[s.activeTab].kernelState);
-	// Stable function references — never change, never cause re-renders.
-	const updateKernelState = useNotebookStore((s) => s.updateKernelState);
-	const clearTab = useNotebookStore((s) => s.clearTab);
-
 	const kernelStopped = kernelState === "stopped" || kernelState === "error";
+	const changing = kernelState === "starting";
 
-	const handleRestart = async () => {
+	const handleRestart = () => {
 		const tab = useNotebookStore.getState().activeTab;
-		if (kernelState === "busy") {
-			if (!window.confirm("A cell is currently running. Restart kernel?")) return;
-		}
-		try {
-			updateKernelState(tab, "starting");
-			const state = await restartKernel(tab);
-			updateKernelState(tab, state);
-			useNotebookStore.getState().notebooks[tab].cells.forEach((cell) => {
-				useNotebookStore.getState().setCellOutputs(tab, cell.id, []);
-				useNotebookStore.getState().setCellExecutionCount(tab, cell.id, 0);
-				useNotebookStore.getState().setCellState(tab, cell.id, "idle");
-			});
-		} catch (e) {
-			console.error("restart failed", e);
-			updateKernelState(tab, "error");
-		}
+		if (kernelState === "busy" && !window.confirm("A cell is currently running. Restart kernel?")) return;
+		void restartTab(tab).catch((error) => console.error("Restart failed", error));
 	};
-
-	const handleStop = async () => {
-		if (kernelStopped) return;
-		const tab = useNotebookStore.getState().activeTab;
-		try {
-			await stopKernel(tab);
-			updateKernelState(tab, "stopped");
-		} catch (e) {
-			console.error("stop failed", e);
-			updateKernelState(tab, "stopped");
-		}
+	const handleStop = () => {
+		void stopTab(useNotebookStore.getState().activeTab).catch((error) => console.error("Stop failed", error));
 	};
-
-	const handleRunAll = async () => {
-		const tab = useNotebookStore.getState().activeTab;
-		const cells = useNotebookStore.getState().notebooks[tab].cells;
-		for (const cell of cells) {
-			if (cell.source.trim()) {
-				await executeSingleCell(tab, cell.id);
-			}
-		}
-	};
-
+	const handleRunAll = () => { void executeAllCells(useNotebookStore.getState().activeTab); };
 	const handleClear = () => {
-		clearTab(useNotebookStore.getState().activeTab);
+		void clearNotebook(useNotebookStore.getState().activeTab).catch((error) => console.error("Clear failed", error));
 	};
 
 	return (
@@ -129,20 +83,20 @@ export const Toolbar = memo(function Toolbar() {
 					{kernelState}
 				</span>
 			</div>
-			<button onClick={handleClear} style={buttonStyle}>
+			<button onClick={handleClear} disabled={changing} style={buttonStyle}>
 				Clear
 			</button>
 			<div style={{ flexGrow: 1 }} />
-			<button onClick={handleRunAll} style={buttonStyle}>
+			<button onClick={handleRunAll} disabled={kernelStopped || changing || kernelState === "busy"} style={buttonStyle}>
 				Run All
 			</button>
-			<button onClick={handleRestart} style={buttonStyle}>
+			<button onClick={handleRestart} disabled={changing} style={buttonStyle}>
 				↻ Restart
 			</button>
 			<button
 				onClick={handleStop}
 				style={{ ...buttonStyle, opacity: kernelStopped ? 0.45 : 1 }}
-				disabled={kernelStopped}
+				disabled={kernelStopped || changing}
 			>
 				■ Stop
 			</button>

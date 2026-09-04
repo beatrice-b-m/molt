@@ -100,6 +100,7 @@ export interface NotebookStore {
 	initializeFromPersisted: (tabs: PersistedTab[]) => void;
 	/** Reset a tab to its initial base state. */
 	clearTab: (tabIndex: number) => void;
+	resetExecution: (tabIndex: number) => void;
 }
 
 // ─── store implementation ─────────────────────────────────────────────────────
@@ -111,7 +112,8 @@ export const useNotebookStore = create<NotebookStore>((set, get) => ({
 	isCommandMode: false,
 
 	setActiveTab: (tab) => {
-		set({ activeTab: tab, isCommandMode: false });
+		if (!Number.isInteger(tab) || tab < 0 || tab >= get().notebooks.length) return;
+		set({ activeTab: tab, isCommandMode: false, focusedCellId: null });
 	},
 
 	setFocusedCellId: (id) => {
@@ -296,6 +298,15 @@ export const useNotebookStore = create<NotebookStore>((set, get) => ({
 							}))
 						: [makeCell()];
 				return { ...nb, cells };
+			}),
+		}));
+	},
+
+	resetExecution: (tabIndex) => {
+		set((s) => ({
+			notebooks: s.notebooks.map((nb) => nb.tabIndex !== tabIndex ? nb : {
+				...nb, executionCounter: 0,
+				cells: nb.cells.map((cell) => ({ ...cell, state: "idle", executionCount: null, outputs: [] })),
 			}),
 		}));
 	},

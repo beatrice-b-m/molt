@@ -4,9 +4,10 @@ import { TabBar } from "./components/TabBar";
 import { Toolbar } from "./components/Toolbar";
 import { Notebook } from "./components/Notebook";
 import { useNotebookStore } from "./store/notebookStore";
-import { ensureKernel, getConfigWarning } from "./hooks/useKernel";
+import { getConfigWarning, getConfig } from "./services/backend";
 import { usePersistence } from "./hooks/usePersistence";
-import { invoke } from "@tauri-apps/api/core";
+import { executeAllCells, initializeTab } from "./services/execution";
+import { setEffectsClass } from "./theme/appearance";
 import { listen } from "@tauri-apps/api/event";
 
 // ─── WarningBanner ────────────────────────────────────────────────────────────
@@ -28,16 +29,6 @@ function WarningBanner({ message }: { message: string }) {
 	);
 }
 
-interface AppearanceConfig {
-	app: { native_effects: boolean };
-}
-
-function setEffectsClass(enabled: boolean) {
-	const root = document.documentElement;
-	root.classList.toggle("effects-on", enabled);
-	root.classList.toggle("effects-off", !enabled);
-}
-
 // ─── App ──────────────────────────────────────────────────────────────────────
 
 export function App() {
@@ -50,7 +41,6 @@ export function App() {
 	const insertCellBelow = useNotebookStore((s) => s.insertCellBelow);
 	const deleteCell = useNotebookStore((s) => s.deleteCell);
 	const setFocusedCellId = useNotebookStore((s) => s.setFocusedCellId);
-	const updateKernelState = useNotebookStore((s) => s.updateKernelState);
 
 	const [configWarning, setConfigWarning] = useState<string | null>(null);
 	const { loaded: notebooksLoaded, error: persistenceError } = usePersistence();
@@ -60,11 +50,7 @@ export function App() {
 
 	// ── appearance: sync effect mode from persisted config and settings changes ──
 	useEffect(() => {
-		invoke<string>("get_config")
-			.then((raw) => {
-				const parsed = JSON.parse(raw) as AppearanceConfig;
-				setEffectsClass(parsed.app.native_effects);
-			})
+		getConfig().then((config) => setEffectsClass(config.app.native_effects))
 			.catch((e) => console.error("get_config appearance sync failed", e));
 
 		const unlisten = listen<{ enabled: boolean }>("native-effects-changed", (event) => {
@@ -75,33 +61,11 @@ export function App() {
 	}, []);
 
 
-	// ── boot: config warning + initial kernel ─────────────────────────────────
 	useEffect(() => {
-		getConfigWarning()
-			.then((w) => setConfigWarning(w))
-			.catch((e) => console.error("getConfigWarning failed", e));
-
-		updateKernelState(activeTab, "starting");
-		ensureKernel(activeTab)
-			.then((state) => updateKernelState(activeTab, state))
-			.catch((e) => console.error("ensureKernel failed", e));
-		// Run once on mount — intentionally omitting activeTab from deps.
-		// eslint-disable-next-line react-hooks/exhaustive-deps
+		getConfigWarning().then(setConfigWarning).catch((error) => console.error("Configuration warning failed", error));
 	}, []);
 
-	// ── lazy kernel start on tab switch ──────────────────────────────────────
-	useEffect(() => {
-		// Read live state — the boot effect may have already set this tab to "starting".
-		const current = useNotebookStore.getState().notebooks[activeTab].kernelState;
-		if (current !== "stopped") return;
-
-		updateKernelState(activeTab, "starting");
-		ensureKernel(activeTab)
-			.then((state) => updateKernelState(activeTab, state))
-			.catch((e) =>
-				console.error(`ensureKernel tab ${activeTab} failed`, e),
-			);
-	}, [activeTab]); // eslint-disable-line react-hooks/exhaustive-deps
+	useEffect(() => { void initializeTab(activeTab); }, [activeTab]);
 
 	// ── global keyboard shortcuts ─────────────────────────────────────────────
 	useEffect(() => {
@@ -113,6 +77,12 @@ export function App() {
 					setActiveTab(Number(e.key) - 1);
 					return;
 				}
+			}
+
+			if (e.metaKey && e.shiftKey && e.key === "Enter") {
+				e.preventDefault();
+				void executeAllCells(activeTab);
+				return;
 			}
 
 			// Esc: enter command mode + blur cell
@@ -130,6 +100,7 @@ export function App() {
 				e.preventDefault();
 				const newId = insertCellAbove(activeTab, focusedCellId);
 				setFocusedCellId(newId);
+				setCommandMode(false);
 				return;
 			}
 
@@ -138,6 +109,7 @@ export function App() {
 				e.preventDefault();
 				const newId = insertCellBelow(activeTab, focusedCellId);
 				setFocusedCellId(newId);
+				setCommandMode(false);
 				return;
 			}
 

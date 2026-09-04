@@ -1,22 +1,12 @@
 import { useEffect, useState } from "react";
-import { invoke } from "@tauri-apps/api/core";
+import { getConfig, saveConfig, setNativeEffects, type AppConfig } from "../services/backend";
+import { setEffectsClass } from "../theme/appearance";
 import { emit } from "@tauri-apps/api/event";
-
-interface AppConfig {
-	python: { interpreter: string };
-	app: { auto_launch: boolean; tab_count: number; native_effects: boolean };
-}
 
 const DEFAULT_CONFIG: AppConfig = {
 	python: { interpreter: "python3" },
 	app: { auto_launch: false, tab_count: 4, native_effects: true },
 };
-
-function setEffectsClass(enabled: boolean) {
-	const root = document.documentElement;
-	root.classList.toggle("effects-on", enabled);
-	root.classList.toggle("effects-off", !enabled);
-}
 
 export function SettingsForm() {
 	const [config, setConfig] = useState<AppConfig>(DEFAULT_CONFIG);
@@ -26,11 +16,7 @@ export function SettingsForm() {
 	const [previewError, setPreviewError] = useState<string | null>(null);
 
 	useEffect(() => {
-		invoke<string>("get_config")
-			.then((raw) => {
-				const parsed = JSON.parse(raw) as AppConfig;
-				setConfig(parsed);
-			})
+		getConfig().then(setConfig)
 			.catch((e) => {
 				setLoadError(String(e));
 			});
@@ -47,7 +33,7 @@ export function SettingsForm() {
 		}));
 		setPreviewError(null);
 
-		invoke("set_native_effects", { enabled })
+		setNativeEffects(enabled)
 			.then(() => emit("native-effects-changed", { enabled }))
 			.catch((e) => {
 				setPreviewError(String(e));
@@ -55,7 +41,7 @@ export function SettingsForm() {
 	}
 
 	function handleSave() {
-		invoke("save_config", { config: JSON.stringify(config) })
+		saveConfig(config)
 			.then(() => {
 				setSaveStatus("saved");
 				setSaveError(null);
@@ -195,56 +181,7 @@ export function SettingsForm() {
 							marginTop: 4,
 						}}
 					>
-						Path to the Python interpreter. Absolute path or name on PATH. Changes take effect on next kernel restart.
-					</div>
-				</div>
-			</section>
-
-			<section style={{ marginBottom: 24 }}>
-				<div
-					style={{
-						color: "var(--text-primary)",
-						fontWeight: 600,
-						fontSize: 14,
-						marginBottom: 12,
-					}}
-				>
-					Application
-				</div>
-
-				<div style={{ marginBottom: 12 }}>
-					<label
-						style={{
-							display: "flex",
-							alignItems: "center",
-							gap: 8,
-							cursor: "pointer",
-							color: "var(--text-secondary)",
-							fontSize: 13,
-						}}
-					>
-						<input
-							type="checkbox"
-							checked={config.app.auto_launch}
-							onChange={(e) =>
-								setConfig((prev) => ({
-									...prev,
-									app: { ...prev.app, auto_launch: e.target.checked },
-								}))
-							}
-							style={{ cursor: "pointer" }}
-						/>
-						Launch at login
-					</label>
-					<div
-						style={{
-							color: "var(--text-secondary)",
-							fontSize: 11,
-							marginTop: 4,
-							marginLeft: 22,
-						}}
-					>
-						Start Molt automatically when you log in to macOS.
+						Path to the Python interpreter. Absolute path or name on PATH. Save and relaunch Molt to use the new interpreter.
 					</div>
 				</div>
 			</section>

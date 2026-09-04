@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { invoke } from "@tauri-apps/api/core";
+import { loadNotebooks, saveNotebooks } from "../services/backend";
 import { useNotebookStore } from "../store/notebookStore";
 import { createNotebookSaver, parseNotebooks, serializeNotebooks } from "../services/persistence";
 
@@ -13,12 +13,12 @@ export function usePersistence(): { loaded: boolean; error: string | null } {
 		let saver: ReturnType<typeof createNotebookSaver> | undefined;
 		async function initialize() {
 			try {
-				const raw = await invoke<string | null>("load_notebooks");
+				const raw = await loadNotebooks();
 				if (cancelled) return;
 				if (raw !== null) useNotebookStore.getState().initializeFromPersisted(parseNotebooks(raw));
 				let snapshot = serializeNotebooks(useNotebookStore.getState().notebooks);
 				saver = createNotebookSaver(
-					(data) => invoke<void>("save_notebooks", { data }),
+					saveNotebooks,
 					(message) => { if (!cancelled) setError(message); },
 					snapshot,
 				);

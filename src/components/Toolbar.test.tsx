@@ -1,7 +1,9 @@
-import { beforeEach, describe, expect, it } from "vitest";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { Toolbar } from "./Toolbar";
 import { useNotebookStore } from "../store/notebookStore";
+
+vi.mock("../services/backend", () => ({ stopKernel: vi.fn().mockResolvedValue(undefined) }));
 
 const initialState = useNotebookStore.getState();
 
@@ -18,7 +20,7 @@ beforeEach(() => {
 });
 
 describe("Toolbar clear button", () => {
-	it("resets only the active tab to a fresh empty notebook", () => {
+	it("resets only the active tab to a fresh empty notebook", async () => {
 		const store = useNotebookStore.getState();
 		store.setActiveTab(2);
 
@@ -38,6 +40,7 @@ describe("Toolbar clear button", () => {
 		render(<Toolbar />);
 		fireEvent.click(screen.getByRole("button", { name: "Clear" }));
 
+		await waitFor(() => expect(nb(2).kernelState).toBe("stopped"));
 		const cleared = nb(2);
 		expect(cleared.cells).toHaveLength(1);
 		expect(cleared.cells[0].source).toBe("");

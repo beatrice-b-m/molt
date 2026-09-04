@@ -98,7 +98,7 @@ export function Notebook() {
 							afterCellId={cells[i - 1].id}
 						/>
 					)}
-					<Cell tabIndex={activeTab} cell={cell} isLast={i === cells.length - 1} />
+					<Cell tabIndex={activeTab} cell={cell} />
 				</div>
 			))}
 
