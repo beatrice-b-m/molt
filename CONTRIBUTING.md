@@ -109,6 +109,5 @@ published. It sets the embedded bundle version from the release tag and uploads
 one DMG per architecture. Local package versions remain development defaults.
 Do not publish or upload releases as part of routine validation.
 
-Before an open-source release, resolve the missing repository license file;
-`Cargo.toml` currently declares MIT. Do not assume the documentation site's licensing
-policy applies to the application or branding.
+Application source is licensed under MIT. The Molt name, logo, icon, and other
+project marks are excluded from that grant; see `LICENSE`.

@@ -37,3 +37,8 @@ npm run dev
 ```
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for architecture, validation, and release commands.
+
+## License
+
+Application source is available under the [MIT License](LICENSE). The Molt name,
+logo, icon, and other project marks are excluded from that grant.
